@@ -1,0 +1,602 @@
+import yaml, httpx, random, copy, colorsys, re
+from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor
+
+from yamlinclude import YamlIncludeConstructor
+YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader, base_dir='')
+
+
+ENV = "vscode"
+
+
+def debug( msg ):
+    if ENV == "vscode":
+        print( msg )
+
+
+class WLED_Director( ):
+
+    ## Keys to strip out of a wled JSON pull before displaying it to the user.
+    _json_strip = ['udpn', 'ps', 'pl', 'nl', 'on', 'bri', 'transition', 'lor', 'mainseg' ]
+
+
+    _palettes = ['Default', '* Random Cycle', '* Color 1', '* Colors 1&2', '* Color Gradient', '* Colors Only', 'Party', 'Cloud', 
+                'Lava', 'Ocean', 'Forest', 'Rainbow', 'Rainbow Bands', 'Sunset', 'Rivendell', 'Breeze', 'Red & Blue', 'Yellowout', 
+                'Analogous', 'Splash', 'Pastel', 'Sunset 2', 'Beech', 'Vintage', 'Departure', 'Landscape', 'Beach', 'Sherbet', 'Hult', 
+                'Hult 64', 'Drywet', 'Jul', 'Grintage', 'Rewhi', 'Tertiary', 'Fire', 'Icefire', 'Cyane', 'Light Pink', 'Autumn', 
+                'Magenta', 'Magred', 'Yelmag', 'Yelblu', 'Orange & Teal', 'Tiamat', 'April Night', 'Orangery', 'C9', 'Sakura', 'Aurora', 
+                'Atlantica', 'C9 2', 'C9 New', 'Temperature', 'Aurora 2', 'Retro Clown', 'Candy', 'Toxy Reaf', 'Fairy Reaf', 'Semi Blue', 
+                'Pink Candy', 'Red Reaf', 'Aqua Flash', 'Yelblu Hot', 'Lite Light', 'Red Flash', 'Blink Red', 'Red Shift', 'Red Tide', 'Candy2'
+    ]
+
+    _effects = ['Solid', 'Blink', 'Breathe', 'Wipe', 'Wipe Random', 'Random Colors', 'Sweep', 'Dynamic', 'Colorloop', 'Rainbow', 'Scan', 
+            'Scan Dual', 'Fade', 'Theater', 'Theater Rainbow', 'Running', 'Saw', 'Twinkle', 'Dissolve', 'Dissolve Rnd', 'Sparkle', 
+            'Sparkle Dark', 'Sparkle+', 'Strobe', 'Strobe Rainbow', 'Strobe Mega', 'Blink Rainbow', 'Android', 'Chase', 'Chase Random', 
+            'Chase Rainbow', 'Chase Flash', 'Chase Flash Rnd', 'Rainbow Runner', 'Colorful', 'Traffic Light', 'Sweep Random', 'Chase 2', 
+            'Aurora', 'Stream', 'Scanner', 'Lighthouse', 'Fireworks', 'Rain', 'Tetrix', 'Fire Flicker', 'Gradient', 'Loading', 'Police', 
+            'Fairy', 'Two Dots', 'Fairytwinkle', 'Running Dual', 'Halloween', 'Chase 3', 'Tri Wipe', 'Tri Fade', 'Lightning', 'ICU', 
+            'Multi Comet', 'Scanner Dual', 'Stream 2', 'Oscillate', 'Pride 2015', 'Juggle', 'Palette', 'Fire 2012', 'Colorwaves', 'Bpm', 
+            'Fill Noise', 'Noise 1', 'Noise 2', 'Noise 3', 'Noise 4', 'Colortwinkles', 'Lake', 'Meteor', 'Meteor Smooth', 'Railway', 
+            'Ripple', 'Twinklefox', 'Twinklecat', 'Halloween Eyes', 'Solid Pattern', 'Solid Pattern Tri', 'Spots', 'Spots Fade', 'Glitter', 
+            'Candle', 'Fireworks Starburst', 'Fireworks 1D', 'Bouncing Balls', 'Sinelon', 'Sinelon Dual', 'Sinelon Rainbow', 'Popcorn', 'Drip', 
+            'Plasma', 'Percent', 'Ripple Rainbow', 'Heartbeat', 'Pacifica', 'Candle Multi', 'Solid Glitter', 'Sunrise', 'Phased', 'Twinkleup', 
+            'Noise Pal', 'Sine', 'Phased Noise', 'Flow', 'Chunchun', 'Dancing Shadows', 'Washing Machine', 'Candy Cane', 'Blends', 'TV Simulator', 
+            'Dynamic Smooth'
+    ]
+
+    # @pyscript_compile
+    def pull_config( self ):
+        with open( "wled-holiday.yaml", 'r' ) as file:
+            self.config = yaml.load( file, yaml.FullLoader )
+            log.debug( f"{self.config=}")
+
+    # @pyscript_compile
+    def wled_post( self, host, data ):
+        try:
+            r = httpx.post( url=f"{host}/json/state", json=data )
+
+            if r.status_code == 200:
+                log.debug( f"{host} - {r.text}" )
+                return
+        except BaseException as e:
+            log.error( f"( {host} ) -> {e}")
+
+        
+    # @pyscript_compile
+    def wled_get( self, host, path="/json/state" ):
+        r = httpx.get( url=f"{host}{path}" )
+
+        if r.status_code == 200:
+            return r.json()
+
+        return None
+    
+    ## trim/duplicate segment data based on segment count in host definition.
+    def fix_segments( self, data:dict, host:str ):
+        # adjust segments to light ( trim/duplicate )
+        wled_segs = self.config['hosts'][host]['segments']
+        #data = copy.deepcopy( self.wled_data[host] )
+        data_segs = len( data['seg'] )
+
+        if wled_segs > data_segs:
+            for i in range( data_segs, wled_segs ):
+                data['seg'].append( data['seg'][i%data_segs])
+        elif wled_segs < data_segs:
+            for i in range( wled_segs, data_segs ):
+                data['seg'].pop(wled_segs)
+    
+    ## send data to all of the wled instances
+    # @pyscript_compile
+    def update_lights( self ):
+        req_hosts = []
+        req_data = []
+
+        for hostname, host_data in self.wled_data.items():
+
+            if "disabled" in host_data and host_data['disabled']:
+                continue
+
+            self.fix_segments( self.wled_data[hostname], hostname )
+
+            log.debug( f"self.wled_data[{hostname}]= {self.wled_data[hostname]}")
+
+            req_hosts.append( self.config['hosts'][hostname]['hostname'] )
+            req_data.append( self.wled_data[hostname] )
+
+
+        with ThreadPoolExecutor(max_workers=7) as pool:
+            pool.map(self.wled_post,req_hosts, req_data)
+
+    
+    def color_hsv_to_rgb( self, h:int, s:int, v:int ):
+        hf = h/255
+        sf = s/255
+        vf = v/255
+
+        ( rf, gf, bf ) = colorsys.hsv_to_rgb( hf, sf, vf )
+
+        return [ int(rf*255), int(gf*255), int(bf*255) ]
+    
+
+    def color_random_hue( self, key:str ) -> list:
+        return self.color_hsv_to_rgb( self.keyed_rand( key, 256 ), 255, 255 )
+    
+    
+    def random_list( self, key:str, lst:list, no_repeat:str = "" ) -> list:
+        l_key = f"{key}%LIST"
+
+        if l_key in self.keyed_randoms:
+            return lst[self.keyed_randoms[l_key] % len(lst)] ## modulus here in case we use a different key than was used with this list the first time.
+        
+        idx = random.randrange(0, len(lst) )
+
+        if no_repeat:
+            nr_key = f"{no_repeat}%NORP"
+
+            if nr_key not in self.keyed_randoms:
+                self.keyed_randoms[nr_key] = [idx]
+            else:
+                for i in range(8):
+                    if idx in self.keyed_randoms[nr_key]:
+                        idx = random.randrange(0, len(lst) )
+                    else:
+                        self.keyed_randoms[nr_key].append( idx )
+                        break
+                self.keyed_randoms[l_key] = idx
+        return lst[idx]
+    
+    def random_int( self, key:str, start:int = 0, end:int = 0 ) -> int:
+        int_key = f"{key}%INT"
+
+        if int_key in self.keyed_randoms:
+            return self.keyed_randoms[int_key]
+         
+        if end:
+            idx = random.randrange( start, end )
+        elif start:
+            idx = random.randrange( start )
+        else:
+            log.error( "no start or end value, no existing key - returning zero.")
+            idx = 0
+
+        self.keyed_randoms[int_key] = idx
+        return idx
+    
+
+    ## scan final preset data structure and replace special tags / proper names with raw data so we can send it to WLED
+    def parse_preset( self, data:dict, group:str ):
+        log.debug( "" )
+
+        segs = data['seg']
+
+        for i_seg in range(len(data['seg'])):
+
+            seg = segs[i_seg]
+
+            ## HANDLE $TAGS FIRST, THEN FALL THROUGH TO NORMAL HANDLING BELOW
+
+
+            ## look for named effects and replace with index
+
+            if 'fx' in seg:
+                fx = seg['fx']
+
+                if isinstance( fx, str ):
+                    if fx in self._effects:
+                        data['seg'][i_seg]['fx'] = self._effects.index( fx )
+                    else:
+                        log.error( f"fx: {fx} not in self._effects!" )
+                        data['seg'][i_seg]['fx'] = 0
+
+            ## look for named palettes and replace with index
+            if 'pal' in seg:
+                pal = seg['pal']
+
+                if isinstance( pal, str ):
+                    if pal in self._palettes:
+                        data['seg'][i_seg]['pal'] = self._palettes.index( pal )
+                    else:
+                        log.error( f"pal: {pal} not in self._palettes!" )
+                        data['seg'][i_seg]['pal'] = 0
+
+            for int_tag in [ "sx", "ix", "c1", "c2", "c3" ]:
+                if int_tag in seg:
+                    val = seg[int_tag]
+
+                    if isinstance( val, str ):
+                        if val.startswith( "$rand" ):
+                            rb = re.findall( '[(](.*?)[)]', val )
+                            rx = re.findall( '<(.*?)>', val )
+                            rand = 0
+
+
+                            if len(rb):
+                                args = str( rb[0] ).split( "," )
+                                if len(args) > 1:
+                                    rand = self.random_int( rx[0] if len(rx) else group, int( args[0] ), int( args[1] ) )
+                                else:
+                                    rand = self.random_int( rx[0] if len(rx) else group, int( rb[0] ) )
+                            elif len(rx):
+                                rand = self.random_int( key=rx[0] )  
+                            else: 
+                                log.error( f"{int_tag}: {val} must have format '$rand_int(45)' or '%rand_int(45,150) or '$rand_int<key>'")
+                                continue
+
+                            log.debug( f"{int_tag}: {val} = {rand}")
+                            data['seg'][i_seg][int_tag] = rand
+
+
+            ## look for color specific $tags / color names...
+            if 'col' in seg:
+                log.debug( f"col: {seg['col']}" )
+                for i_col in range(len(seg['col'])):
+                    # handle string values ( pull from libraries/handle active controls )
+
+                    col = seg['col'][i_col]
+                    log.debug( f"col[{i_col}]={col}")
+
+                    if isinstance( col, str ):
+
+                        ## handle $ tags first, then fall through to name indexing
+                        if col[0] == '$':
+                            if col.startswith( "$rand_hue"):
+                                rx = re.findall( '<(.*?)>', col )
+                                if len(rx):
+                                    key = rx[0]
+                                else:
+                                    key = group
+
+                                color = self.color_random_hue( random.choice( key ) )
+                                log.debug( f"rand_hue<{key}> = {color}")
+                                data['seg'][i_seg]['col'][i_col] = color
+                                continue
+
+
+                            ## TODO -- Add key based memory to this
+                            elif col.startswith( "$rand_list" ):
+                                rb = re.findall( '[(](.*?)[)]', col )
+                                rx = re.findall( '<(.*?)>', col )
+                                rb = re.findall( '!(.*?)!', col )
+                                no_rep = ""
+
+                                if not len(rb):
+                                    log.error( f"col: $rand_list must have '(list_name)', using black" )
+                                    col = 'black'
+                                    continue
+
+                                if rb[0][0] == '!':
+                                    rb[0] = rb[0][1:]
+                                    no_rep = rb[0]
+
+                                if len(rb):
+                                    no_rep = rb[0]
+
+                                if rb[0] in self.config['lists']['colors']:
+                                    n_col = self.random_list( rx[0] if len(rx) else group, self.config['lists']['colors'][rb[0]], no_rep )
+
+                                    log.debug( f"{n_col=}")
+
+                                    if isinstance( n_col, list ):
+                                        data['seg'][i_seg]['col'][i_col] = n_col
+                                        continue
+
+                                    col = n_col
+
+                        if col in self.config['colors']:
+                            data['seg'][i_seg]['col'][i_col] = self.config['colors'][col]
+                        else:
+                            data['seg'][i_seg]['col'][i_col] = [0,0,0]
+                            log.error( f"col: {col} not in config.colors!" )
+
+
+    ## TODO - finish this concept and add to parser
+    def keyed_rand( self, key:str, first:int, second:int = 0 ) -> int:
+        if key in self.keyed_randoms:
+            return self.keyed_randoms[key]
+
+        if second:
+            rand = random.randrange(first,second)
+        else:
+            rand = random.randrange( first )
+
+        self.keyed_randoms[key] = rand
+        return rand
+
+    def keyed_rand_list( self, key:str, lst:list ):
+        ## could be wrong key, lets make sure we handle that case
+        if key in self.keyed_randoms:
+            rnd = self.keyed_randoms[key]
+
+            if rnd >= len(lst):
+                log.warning( f"{rnd=} >= len_list({len(lst)}), modulou")
+                return lst[rnd % len(lst)]
+            
+            return lst[rnd]   
+        else:
+            rnd = lst[random.randrange(0,len(lst))]  
+            self.keyed_randoms[key] = rnd
+            return rnd
+
+    
+    
+    def check_update( self ):
+        # if self.ha_pull_config:
+        #     self.pull_config()
+        #     self.ha_pull_config = False
+
+        if self.show_type == "off":
+            return
+
+        # if self.ha_pick_show:
+        #     self.time_pick_show = datetime.now()
+        #     self.ha_pick_show = False
+
+        if self.time_pick_show <= datetime.now():
+
+            if self.pick_show():
+                self.time_pick_show = datetime.now() + self.show_duration
+                
+                self.update_lights()
+            else:
+                log.warning( "pick_show() returned None, retry in 10s" )
+                self.time_pick_show = datetime.now() + timedelta( seconds = 10 )
+
+    ## search data for weights, either as value or as weight key of sub data use them to randomly pick a result from the available ones
+    def weighted_pick( self, data:dict ) -> str:
+        if data:
+            if len( data ) == 1:
+                return next(iter(data))
+            
+            sum_wt = 0
+            accum = 0
+
+            for k, v in data.items():
+                if isinstance( v, str ) and v == "test":
+                    return k
+                if isinstance( v, dict ):
+                    if 'weight' in v:
+                        ## if any element is labelled test we pick this one, if more than one will pick first
+                        if isinstance( v['weight'], str ) and v['weight'] == "test":
+                            return k
+                        elif isinstance( v['weight'], int ):
+                            sum_wt += v['weight']
+                    else:
+                        v['weight'] = 50
+                        sum_wt += 50
+
+                elif isinstance( v, int ):
+                    sum_wt += v
+                ## if any element is labelled test we pick this one, if more than one will pick first
+                elif isinstance( v, str ) and v == "test":
+                    return k
+                elif not v:
+                    sum_wt += 50
+                    data[k] = 50
+
+            choice = random.randrange(0, sum_wt)
+
+            for k, v in data.items():
+                if isinstance( v, dict ):
+                    accum += v['weight']
+                elif isinstance( v, int ):
+                    accum += v
+
+                if choice <= accum:
+                    return k
+        else:
+            log.error( f"({data}) - no data passed!" )
+        
+        log.error( "not returning data!")
+        return ""
+
+    def merge_wled_data( self, src, dest ):
+        src_segs = len( src['seg'] )
+        dest_segs = len( dest['seg'] )
+
+        ## loop through destination.  If we have more destination segments, duplicate source, if less truncate:
+        for i in range(dest_segs):
+            dest['seg'][i].update( src['seg'][i%src_segs] )
+
+    def pick_show( self ) -> bool:
+        ## clear data out...
+        self.init_wled_data()
+        self.keyed_randoms.clear()
+
+        show_type = self.show_type ## copy incase this changes
+
+        log.debug( "" )
+        
+        if show_type in self.config['shows']:
+            shows = self.config['shows'][show_type]
+
+            # weighted pick for preset
+            self.show = self.weighted_pick( shows )
+            log.debug( f'{self.show=}')
+
+            if not self.show:
+                log.error( f"weighed_pick({shows}) returned None" )
+                return False
+            
+            show_data = shows[self.show]
+            log.debug( f'{show_data=}')
+
+            if 'groups' not in show_data or len( show_data['groups'] ) == 0:
+                log.error( f"self.config.shows.{show_type}.{self.show} has no groups!")
+                return False
+            
+            if 'duration' in show_data:
+                self.show_duration = timedelta( seconds=show_data['duration'] )
+            else:
+                log.error( f"duration not in config.shows.{self.show_type}.{self.show} - using 60s..." )
+                self.show_duration = timedelta( seconds=60 )
+
+            for g_name, g_data in show_data['groups'].items():
+                log.debug( f'{g_name=} - {g_data=}')
+
+                if 'hosts' not in g_data:
+                    log.error( f"self.config.shows.{show_type}.{self.show}.{g_name} has no hosts!")
+                    return False
+                
+                if 'preset' not in g_data:
+                    log.error( f"self.config.shows.{show_type}.{self.show}.{g_name} has no preset!")
+                    return False
+                
+                preset = ""
+                
+                if g_data['preset'].startswith( "$list" ):
+                    l_name = g_data['preset']
+
+                    rb = re.findall( "[(](.*?)[)]", g_data['preset'] )
+
+                    if len( rb ):
+                        if rb[0] not in self.config['lists']['presets']:
+                            log.error( f"{rb[0]}({l_name}) not in self.config.lists.presets")
+                            return False
+
+                        preset = self.weighted_pick( self.config['lists']['presets'][rb[0]] )
+
+                    else:
+                        log.error( f"{l_name} must be in format '$list(list_name)'" )
+                        return False
+                            
+                else:
+                    preset = g_data['preset']
+                        
+                if preset not in self.config['presets']:
+                    log.error( f"self.config.shows.{show_type}.{self.show}.{g_name}.{preset} not in config.presets!")
+                    return False
+                
+                p_data = copy.deepcopy( self.config['presets'][preset] )
+                log.debug( f"preset: {p_data}")
+
+                if 'updates' in g_data:
+                    self.merge_wled_data( g_data['updates'], p_data )
+                    log.debug( f"after updates: {p_data}")
+
+                self.parse_preset( p_data, g_name )
+
+                log.debug( f'after parse: {p_data}')
+
+                if isinstance( g_data['hosts'], str ):
+                    g_data['hosts'] = [g_data['hosts'],]
+
+                hosts = []
+
+                for host in g_data['hosts']:
+                    if host.startswith( "$list" ):
+                        rb = re.findall( "[(](.*?)[)]", host )
+                        if len(rb):
+                            if rb[0] not in self.config['lists']['hosts']:
+                                log.error( f"{rb[0]} not in config.lists.hosts" )
+                                return False
+                            
+                            hosts += self.config['lists']['hosts'][rb[0]]
+                        else:
+                            log.error( f"{host} must be in format '$list(list_name)'" )
+                            return False
+                    else:
+                        hosts.append( host )
+
+                for host in hosts:
+                    self.wled_data[host] = p_data               
+
+        else:
+            log.error( f"{show_type} not in config.shows!" )
+            return False
+            
+        return True
+
+    # def ha_pull_config_now( self ):
+    #     self.ha_pull_config = True
+
+    # def ha_pick_show_now( self ):
+    #     self.ha_pick_show = True
+
+    def init_wled_data( self ):
+        ## do this here every round.
+        for k in self.config['hosts']:
+            self.wled_data[k] = { 'seg': [] }
+
+            for i in range( self.config['hosts'][k]['segments'] ):
+                self.wled_data[k]['seg'].append( { "pal": 0, "col": [[0,0,0],[0,0,0],[0,0,0]], "grp": 1, "spc": 0 } )
+        
+    def __init__( self ):
+        log.debug( "" )
+        self.pull_config( )
+
+        ## home assistant flags --- TODO
+        # self.ha_pull_config = False
+        # self.ha_pick_show = False
+
+        ## setup the data registers for wled hosts
+        self.wled_data = dict()
+        self.init_wled_data()
+
+        self.keyed_randoms = dict()
+
+        ## init data...
+        # for role in self.config['hosts']:
+
+        #     ## count max segments in group but this is all deprecated
+        #     max_seg = 0
+        #     for h in self.config['hosts'][role].values():
+        #         max_seg = max( max_seg, h['segments'] )
+
+        #     self.config['hosts'][role]['data'] = { "segments": max_seg }
+
+        #     log.debug( f"config.hosts.{role}.max_segments = {max_seg}" )
+
+        #     self.init_wled_data( role )
+
+        self.time_pick_show     = datetime.now()
+
+        self.show_duration      = timedelta( seconds= 5 )
+        self.show               = ""
+        self.show_type          = "off"
+
+
+import logging, sys
+import logging.handlers
+
+class logColorCodes:
+    grey = "\x1b[38;21m"
+    green = "\x1b[1;32m"
+    yellow = "\x1b[33;21m"
+    red = "\x1b[31;21m"
+    bold_red = "\x1b[31;1m"
+    blue = "\x1b[1;34m"
+    light_blue = "\x1b[1;36m"
+    purple = "\x1b[1;35m"
+    reset = "\x1b[0m"
+
+
+def fmt_filter(record):
+        record.levelname = '<%s>' % record.levelname
+        record.funcName = '%s()' % record.funcName
+        return True
+
+ENV = "vscode"
+
+if ENV == "vscode":
+    log_stream_formatter = logging.Formatter( f'{logColorCodes.blue}[%(asctime)s] {logColorCodes.light_blue}%(levelname)-8s {logColorCodes.purple}%(filename)s{logColorCodes.reset} {logColorCodes.green}%(name)s{logColorCodes.reset}.{logColorCodes.yellow}%(funcName)s{logColorCodes.reset} %(message)s' ) #, "%Y-%m-%d %H:%M:%S" )
+    log_file_formatter = logging.Formatter( f'[%(asctime)s] %(levelname)-8s %(filename)s %(name)s.%(funcName)s %(message)s' ) #, "%Y-%m-%d %H:%M:%S" )
+
+    log = logging.Logger('WLED')
+    log.setLevel(logging.DEBUG)
+
+    handler = logging.handlers.SysLogHandler(address = ('graylog.knet',1550))
+    handler.setLevel( logging.WARNING )
+    handler.setFormatter( log_file_formatter )
+    log.addHandler(handler)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel( logging.DEBUG )
+    handler.setFormatter( log_stream_formatter )
+    log.addHandler(handler)
+
+    log.addFilter( fmt_filter )
+
+    def log_handle_exception( exc_type, exc_value, exc_traceback ) -> None:
+        log.error( "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback) )
+
+    sys.excepthook = log_handle_exception        

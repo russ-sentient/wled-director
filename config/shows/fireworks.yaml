@@ -1,0 +1,17 @@
+1d_trees:
+  weight: 50
+  animate: 10
+
+  groups:
+    trees:
+      hosts: $list(trees)
+      preset: fireworks_1d
+      data:
+        seg:
+          - pal: $list(fireworks_1d)
+    eves:
+      hosts: $list(eves)
+      preset: fireworks_starburst
+      data:
+        seg:
+          - pal: $list<trees>

@@ -1,0 +1,9 @@
+service to save, reload, and capture FX from wled to scene json.
+
+remove 'seg' from yaml and code
+
+merge parse functions into one
+
+clean up code
+
+finish random parsing, decide how to handle scope ( add global key to roles to unify randoms across roles? )

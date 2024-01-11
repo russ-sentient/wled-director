@@ -1,0 +1,514 @@
+ripple_w_hue:
+  weight: 25
+  animate: $rand_int(10,60)
+
+  groups:
+    all_no_angel:
+      preset: hue_ripple
+      data:
+        seg:
+          - col: [ white, $rand_hue(200) ]
+
+ripple_w_rgb:
+  weight: 25
+  animate: 60
+
+  groups:
+    all_no_angel:
+      preset: hue_ripple
+      data:
+        seg:
+          - col: [ white, $rand_list(rgbw_dim) ]
+
+ripple_hue_w:
+  weight: 25
+  animate: $rand_int(10,60)
+
+  groups:
+    all_no_angel:
+      preset: hue_ripple
+      data:
+        seg:
+          - col: [ $rand_hue, white_dim ]
+
+ripple_rgb_w:
+  weight: 25
+  animate: 60
+
+  groups:
+    all_no_angel:
+      preset: hue_ripple
+      data:
+        seg:
+          - col: [ $rand_list(rgbw), white_dim ]
+
+rolling_balls_rgb_w:
+  weight: 20
+  animate: 60
+
+  groups:
+    all_no_angel:
+      preset: rolling_balls
+      data:
+        seg:
+          - col: [ $rand_list(rgb), $rand_list(white_all) ]
+      animate:
+        seg:
+          - col: [ $rand_list(rgb) ]
+
+rolling_balls_w_rgb:
+  weight: 20
+  animate: 60
+
+  groups:
+    all_no_angel:
+      preset: rolling_balls
+      data:
+        seg:
+          - col: [ $rand_list(white_temps), $rand_list(rgb) ]
+
+rgb_glitter:
+  weight: 10
+  animate: 60
+
+  groups:
+    all_no_angel:
+      preset: solid_glitter
+      animate:
+        seg:
+          - col: [ $rand_list(rgbw_dim) ]
+
+rainbow_cane:
+  weight: 30
+  animate: 5
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: rainbow_runner
+
+      data:
+        seg:
+          - col: [ warm_white ]
+
+      animate:
+        seg:
+          - rev: $rand_bool
+
+pride:
+  weight: 30
+  animate: 5
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(pride)
+
+      animate:
+        seg:
+          - rev: $rand_bool(80,20)
+
+candle:
+  weight: 30
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: candle
+
+matched_hue_cane_dup:
+  weight: 50
+  animate: 30
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(multi_color_hue)
+      data:
+        transition: 50
+        seg:
+          - col: [ $rand_hue, warm_white, $rand_hue ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white, $rand_hue ]
+
+matched_hue_cane_dub:
+  weight: 50
+  animate: 30
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(multi_color_hue)
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1>, warm_white, $rand_hue<c2> ]
+      animate:
+        seg:
+          - col: [ $rand_hue<c1>, warm_white, $rand_hue<c2> ]
+      
+zoned_hue_cane_dup:
+  weight: 40
+  animate: 30
+
+  groups:
+    eves: 
+      hosts: $list(eves)
+      preset: $list(multi_color_hue)<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+
+    trees:
+      hosts: $list(trees)
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+
+zoned_hue_cane_dub:
+  weight: 40
+  animate: 30
+
+  groups:
+    eves: 
+      hosts: $list(eves)
+      preset: $list(multi_color_hue)<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1e>, warm_white, $rand_hue<c2e> ]
+      animate:
+        seg:
+          - col: [ $rand_hue<c1e>, warm_white, $rand_hue<c2e> ]
+
+    trees:
+      hosts: $list(trees)
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1t>, warm_white, $rand_hue<c2t> ]
+      animate:
+        seg:
+          - col: [ $rand_hue<c1t>, warm_white, $rand_hue<c2t> ]
+
+multi_hue_cane_dup:
+  weight: 30
+  animate: 30
+
+  groups:
+    eves:
+      hosts: $list(eves)
+      preset: $list(multi_color_hue)<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+    tree-in:
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+    tree-out:
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+    trees-small:
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1>, warm_white ]
+          - col: [ $rand_hue<c2>, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue<c1>, warm_white ]
+          - col: [ $rand_hue<c2>, warm_white ]
+
+multi_hue_cane_dub:
+  weight: 30
+  animate: 30
+
+  groups:
+    eves:
+      hosts: $list(eves)
+      preset: $list(multi_color_hue)<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1e>, warm_white, $rand_hue<c2e> ]
+      animate:
+        seg:
+          - col: [ $rand_hue<c1e>, warm_white, $rand_hue<c2e> ]
+    tree-in:
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1ti>, warm_white, $rand_hue<c2ti> ]
+      animate:
+        seg:
+          - col: [ $rand_hue<c1ti>, warm_white, $rand_hue<c2ti> ]
+    tree-out:
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1to>, warm_white, $rand_hue<c2to> ]
+      animate:
+        seg:
+          - col: [ $rand_hue<c1to>, warm_white, $rand_hue<c2to> ]
+    trees-small:
+      preset: $list<all>
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_hue<c1a>, warm_white, $rand_hue<c2a> ]
+          - col: [ $rand_hue<c1b>, warm_white, $rand_hue<c2b> ]  
+      animate:
+        seg:
+          - col: [ $rand_hue<c1a>, warm_white, $rand_hue<c2a> ]
+          - col: [ $rand_hue<c1b>, warm_white, $rand_hue<c2b> ]         
+
+hue_single:
+  weight: 50
+  animate: 60
+  duration: 300
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(single_color)
+      data:
+          transition: 100
+          seg:
+            - pal: "* Colors 1&2"
+              col: [$rand_hue, ^black]
+
+rgw_single:
+  weight: 30
+  animate: 60
+  duration: 150
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(single_color)
+      data:
+        transition: 100
+        seg:
+          - pal: "* Color 1"
+            col: [$rand_list(xmas_rgw), ^black]
+      animate:
+        seg:
+          - col: [ $rand_list<c1>(xmas_rgw), ^black]
+
+rgb:
+  weight: 40
+  duration: 150
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(multi_color)
+      data:
+        seg:
+          - col: [ $rand_list<c1>(!rgb), $rand_list<c2>(!rgb), $rand_list<c3>(!rgb) ]
+            pal: "* Colors Only"
+
+
+rand_xmas:
+  weight: 60
+  animate: 30
+  duration: 150
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(multi_color)
+      data:
+        transition: 50
+        seg:
+          - col: [ $rand_list<c1>(!xmas_trad), $rand_list<c2>(!xmas_trad), $rand_list<c3>(!xmas_trad) ]
+
+      animate:
+        seg:
+          - col: [ $rand_list<c1>(!xmas_trad), $rand_list<c2>(!xmas_trad), $rand_list<c3>(!xmas_trad) ]
+
+
+red_green_white:
+  weight: 60
+  duration: 90
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(multi_color_hue)
+      data:
+        seg:
+          - col: [ red, white, green ]
+        
+all_crazy:
+  weight: 30 
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(crazy)
+
+solid_white:
+  weight: 70
+  duration: 300
+
+  groups:
+    all:
+      hosts: $list(all)
+      data:
+        strip:
+          seg:
+            - spc: $rand_int(1,2)
+        seg:
+          - pal: 0
+            fx: Solid
+            col: [ warm_white ]
+
+solid_colorful:
+  weight: 70
+  duration: 300
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      data:
+        strip:
+          seg:
+            - spc: $rand_int(1,2)
+        seg:
+          - pal: C9 2
+            fx: Colorful
+
+solid_xmas:
+  weight: 70
+  duration: 300
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      data:
+        strip:
+          seg:
+            - spc: $rand_int(1,2)
+        seg:
+          - pal: "* Colors Only"
+            fx: Colorful
+            col: [ red, warm_white, green ]
+
+solid_rgb:
+  weight: 50
+  duration: 300
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      data:
+        strip:
+          seg:
+            - spc: $rand_int(1,2)
+        seg:
+          - pal: "* Colors Only"
+            fx: Colorful
+            col: [ red, green, blue ]
+
+tf_glitter:
+  weight: 50
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: twinklefox_whites
+
+
+hue_eves_crazy_trees:
+  weight: 30
+  animate: 30
+
+  groups:
+    eves:
+      hosts: $list(eves)
+      preset: $list(multi_color_hue)
+      data:
+        transition: 50
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+
+    trees:
+      hosts: $list(trees)
+      preset: $list(crazy)
+
+
+crazy_eves_hue_trees:
+  weight: 30
+  animate: 30
+
+  groups:
+    eves:
+      hosts: $list(eves)
+      preset: $list(crazy)
+
+    tree-in:
+      preset: $list(multi_color)<trees>
+      data:
+        transition: 50
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+
+    tree-out:
+      preset: $list(multi_color_hue)<trees>
+      data:
+        transition: 50
+        seg:
+          - col: [ $rand_hue, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue, warm_white ]
+
+    trees-small:
+      preset: $list(multi_color_hue)<trees>
+      data:
+        transition: 50
+        seg:
+          - col: [ $rand_hue<st1>, warm_white ]
+          - col: [ $rand_hue<st2>, warm_white ]
+      animate:
+        seg:
+          - col: [ $rand_hue<st1>, warm_white ]
+          - col: [ $rand_hue<st2>, warm_white ]
+
+

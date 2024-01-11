@@ -1,0 +1,244 @@
+rolling_balls:
+  strip:
+    seg:
+      - spc: 1
+  seg:
+    - fx: Rolling Balls
+      pal: 0
+      col: [ $rand_list<c1>(!rgbw), $rand_list<c2>(!rgbw) ]
+      sx: $rand_int<sx>(5,65)
+      ix: $rand_int<ix>(125,255)
+
+hue_ripple:
+  seg:
+    - fx: Ripple
+      pal: "* Colors Only"
+      col: [ white, $rand_hue(50) ]
+      sx: $rand_int<sx>(30,90)
+      ix: $rand_int<ix>(100,255)
+
+solid_glitter:
+  seg:
+    - fx: Solid Glitter
+      pal: 0
+      col: [ $rand_list(rgbw_dim), white ]
+      ix: $rand_int<ix>(40,250)
+
+chunchun:
+  strip:
+    seg:
+      - spc: 1
+  seg:
+    - fx: Chunchun
+      sx: $rand_int<sx>(40,180)
+      ix: $rand_int<ix>(20,170)
+
+candle:
+  seg:
+    - fx: "Candle Multi"
+      pal: "Fire"
+      sx: $rand_int<sx>(40,140)
+      ix: $rand_int<ix>(200,255)
+  strip:
+    seg:
+      - spc: 1
+        mi: True
+
+fairy_twinkle:
+# generic for show driven colors
+  seg:
+    - fx: "Fairytwinkle"
+      sx: $rand_int<sx>
+      ix: $rand_int<ix>
+      pal:  "* Colors Only"
+      col: [ white, warm_white, black ]
+  strip:
+    seg:
+      - spc: 1
+      
+color_twinkles:
+# generic for show driven colors
+  seg:
+    - fx: "Colortwinkles"
+      sx: $rand_int<sx>(0,210)
+      ix: $rand_int<ix>(20,255)
+      pal:  "* Colors Only"
+      col: [ white, warm_white, black ]
+
+colorful:
+# defaults to still, generic for show driven colors
+  seg:
+    - fx: "Colorful"
+      pal: "* Colors Only"
+      col: [ white, warm_white, black ]
+  strip:
+    seg:
+      - spc: 1
+
+colorful_moving:
+# this one defaults to random speed, generic for show driven colors
+  seg:
+    - fx: "Colorful"
+      pal: "* Colors Only"
+      col: [ white, warm_white, black ]
+      sx: $rand_int<sx>
+  strip:
+    seg:
+      - spc: 1
+
+flow_multi:
+  seg:
+    - fx: Flow
+      pal: "* Colors Only"
+      sx: $rand_int<sx>(30,210)
+      ix: $rand_int<ix>(30,230)
+
+flow:
+  seg:
+    - fx: Flow
+      pal: $list(colorful_pals)
+      sx: $rand_int<sx>(30,210)
+      ix: $rand_int<ix>(30,230)
+
+fireworks_starburst:
+## default, force black background so it looks alright.
+  seg:
+    - fx: "Fireworks Starburst"
+      pal: "* Colors Only"
+      col: [ black, ^black, black ]
+      sx: $rand_int<sx>(60,255)
+      ix: $rand_int<ix>
+
+fireworks_starburst_dim:
+## default, force dim background so it looks alright.
+  seg:
+    - fx: "Fireworks Starburst"
+      pal: "* Colors Only"
+      col: [ black, ^dim_white, black ]
+      sx: $rand_int<sx>(60,255)
+      ix: $rand_int<ix>
+
+fireworks_1d:
+  seg:
+    - fx: "Fireworks 1D"
+      pal: $list(fireworks_1d)
+      sx: $rand_int<sx>(60,100)
+      ix: 0
+
+ripple:
+  seg:
+    - fx: Ripple
+      pal: $list(colorful_pals)
+      col: [ black, ^black, black ]
+      sx: $rand_int<sx>(15,90)
+      ix: $rand_int<ix>(50,255)
+
+scanner_dual_multi:
+  seg:
+    - fx: Scanner Dual
+      pal: 0
+      sx: $rand_int<sx>(50,120)
+      ix: $rand_int<ix>(50,100)
+
+scanner_dual:
+  seg:
+    - fx: Scanner Dual
+      pal: $list(colorful_pals)
+      sx: $rand_int<sx>(50,120)
+      ix: $rand_int<ix>(50,100)
+
+dynamic_smooth:
+  seg:
+    - fx: Dynamic Smooth
+      pal: $list(colorful_pals)
+      sx: $rand_int<sx>(220,255)
+      ix: $rand_int<ix>(150,255)
+
+noise2:
+  seg:
+    - pal: "* Colors Only"
+      fx: Noise 2
+      sx: $rand_int<sx1>(100,150)
+      rev: true
+
+chase2:
+  seg:
+    - pal: 0
+      fx: Chase 2
+      ix: $rand_int<ix1>(10,200)
+      sx: $rand_int<sx1>(150,225)
+  strip:
+    seg:
+      - spc: 1
+
+chase3:
+  seg:
+    - pal: 0
+      fx: Chase 3
+      ix: $rand_int<ix1>(10,200)
+      sx: $rand_int<sx1>(150,225)
+  strip:
+    seg:
+      - spc: 1
+
+hue_cane_twinkles:
+  transition: 20
+  seg:
+    - pal: "* Colors 1&2"
+      col: [ $rand_hue, white, black ]
+      fx: Colortwinkles
+      ix: $rand_int<ix1>(20,255)
+      sx: $rand_int<sx1>(0,210)
+
+twinklefox_whites:
+  seg:
+    - pal: "* Colors Only"
+      col: [ cool_white, warm_white, black ]
+      fx: Twinklefox
+      sx: $rand_int<sx1>(100,230)
+      ix: $rand_int<ix1>(50,255)
+
+warm_white_blends:
+  seg:
+    - pal: "* Colors 1&2"
+      col: [ warm_white, white, black ]
+      fx: Blends
+
+rainbow:
+  strip:
+    seg:
+      - mi: True
+  seg:
+    - pal: 0
+      fx: Rainbow
+      ix: $rand_int<ix>
+      sx: $rand_int<sx>
+      rev: True
+
+sinelon_rainbow:
+  seg:
+    - pal: 0
+      fx: Sinelon Rainbow
+      ix: $rand_int<fx1>(60,220)
+      sx: $rand_int<fx1>(60,220)
+
+noise3_rainbow:
+  strip:
+    seg:
+      - spc: 1
+  seg:
+    - pal: Rainbow
+      fx: Noise 4
+      sx: $rand_int<sx1>(50,200)
+
+
+rainbow_runner:
+  strip:
+    seg:
+      - mi: True
+  seg:
+    - pal: 0
+      fx: Rainbow Runner
+      ix: $rand_int<ix>(60,220)
+      sx: $rand_int<sx>(25,180)
+

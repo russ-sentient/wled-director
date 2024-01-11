@@ -1,0 +1,71 @@
+## Define all participating wled instances here:
+settings:
+  wled_retry:
+    count: 5
+    seconds: 10
+
+  blank_all_hosts: False
+
+debug:
+  show_data: False
+  parse_data: False
+  update_lights: False
+  wled_post: False
+
+defaults:
+  duration: 150
+  #show_type: fireworks
+
+  preset:
+    transition: 20
+    seg:
+      - pal: 0
+        col: [ black, black, black ]
+        fx: 0
+        sx: 0
+        ix: 0
+        spc: 0
+        grp: 1
+        rev: False
+        mi: False
+
+  angel:
+    hosts: angel
+    preset: $list(angel_neutral)
+
+
+hosts: !include hosts.yaml
+
+## Shortcut colors:
+colors: !include colors.yaml
+lists:  !include lists.yaml
+presets: !include presets.yaml
+
+shows:
+  fireworks:  !include shows/fireworks.yaml
+  xmas:       !include shows/christmas.yaml
+
+  warm_white:
+    solid_white:
+      duration: 1200
+      groups:
+        all:
+          data:
+            bri: 100
+            seg:
+              - col: [ warm_white ]
+                pal: 0
+                fx: Solid
+  uv:
+    solid_uv:
+      duration: 1200
+      groups:
+        all:
+          data:
+            bri: 100
+            seg:
+              - col: [ uv ]
+                pal: 0
+                fx: Solid
+
+

@@ -1,0 +1,91 @@
+colors:
+  green_red:    [ green, red ]
+  rgb:          [ red, green, blue ]
+  rgb_dim:      [ red_dim, green_dim, blue_dim ]
+  rgbw_dim:     [ red_dim, green_dim, blue_dim, white_dim ]
+  rgbw:         [ red, green, blue, white ]
+  xmas_trad:    [ red, green, blue, yellow ]
+  xmas_rainbow: [ red, green, yellow, orange, blue, purple ]
+  xmas_rgw:     [ red, white, green ]
+  white_temps:  [ white, warm_white, cool_white ]
+  white_sats:   [ white, white_med, white_dim ]
+  white_all:    [ white, warm_white, cool_white, white_med, white_dim ]
+
+palettes:
+  fireworks_1d:
+    Rainbow: 10
+    Fire: 40
+    Grintage: 25
+    Pink Candy: 10
+    Yelmag: 20
+    Red Reaf: 40
+    Orange & Teal: 40
+    Cloud: 40
+
+  colorful_pals:
+    C9 New: 60
+    Sherbet: 30
+    Icefire: 50
+    Lava: 30
+    Light Pink: 40
+    Orange & Teal: 20
+    Rainbow: 10
+    Temperature: 30
+
+presets:
+  crazy:
+    ripple: 50
+    scanner_dual: 50
+    dynamic_smooth: 10
+    flow: 50
+
+  pride:
+    rainbow: 50
+    rainbow_runner: 50
+    sinelon_rainbow: 50
+    noise3_rainbow: 50
+  
+  single_color:
+    noise2: 50
+    fairy_twinkle: 50
+    chunchun: 50
+
+
+  multi_color:
+    noise2: 50
+    fairy_twinkle: 50
+    color_twinkles: 50
+    fireworks_starburst: 25
+    scanner_dual_multi: 25
+    chase2: 30
+    chase3: 50
+    flow_multi: 50
+
+  multi_color_hue:
+    noise2: 50
+    fairy_twinkle: 50
+    color_twinkles: 50
+    colorful: 20
+    fireworks_starburst_dim: 25
+    scanner_dual_multi: 25
+    chase2: 30
+    chase3: 50
+    flow_multi: 50
+
+  angel_neutral:
+    warm_white_blends: 80
+    twinklefox_whites: 80
+
+  hue_cane:
+    hue_cane_chase: 20
+    hue_cane_noise2: 50
+    hue_cane_twinkles: 50
+
+
+hosts:
+  strips:       [ porch, garage, puck ]
+  strings:      [ deck, tree-in, tree-out, trees-small ]
+  eves:         [ porch, garage, deck ]
+  trees:        [ tree-in, tree-out, trees-small ]
+  all_no_angel: [ tree-in, tree-out, porch, garage, deck, puck, trees-small ]
+  all:          [ tree-in, tree-out, porch, garage, deck, puck, trees-small, angel ]

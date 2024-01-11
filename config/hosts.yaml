@@ -1,0 +1,50 @@
+tree-in:
+  hostname: http://wled-tree-in.knet
+  segments: 1
+  type: string
+  bri: 255
+  disabled: True
+
+porch:
+  hostname: http://wled-porch.knet
+  segments: 1
+  type: strip
+  bri: 200
+
+garage:
+  hostname: http://wled-garage.knet
+  segments: 1
+  type: strip
+  bri: 200
+  disabled: True
+
+deck:
+  hostname: http://wled-deck.knet
+  segments: 1
+  type: string
+  bri: 255
+
+tree-out:
+  hostname: http://wled-tree-out.knet
+  segments: 1
+  type: string
+  bri: 255
+
+puck:
+  hostname: http://wled-puck.knet
+  segments: 1
+  type: strip
+  disabled: True
+
+trees-small:
+  hostname: http://wled-secondary-trees.knet
+  segments: 2
+  type: string
+  bri: 255
+
+angel:
+  hostname: http://wled-tree-angel.knet
+  segments: 1
+  type: string
+  bri: 200
+  disabled: True

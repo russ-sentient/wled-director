@@ -910,8 +910,7 @@ class WDirector( ):
 
     
     def __init__( self ):
-        self._wd_logger = WDLogger()
-        self.log = self._wd_logger.getLogger( "WLED_Director" )
+        self.log = WLDLogger.get( self.__class__.__name__ )
 
         self.log.debug( "Starting MQTT Connection..." )
         
@@ -956,6 +955,6 @@ class WDirector( ):
 
 
 
-from mqtt import WDMqtt
-from logger import WDLogger
+from libs.mqtt import WDMqtt
+from libs.logger import WLDLogger
 

@@ -1,5 +1,6 @@
 from paho.mqtt import client as mqtt_client
 from director import WDirector
+from .logger import WLDLogger
 from typing import Callable
 import json
 
@@ -84,7 +85,7 @@ class WDMqtt:
 
     def __init__( self, WD_inst:WDirector, base_topic:str  ):
         self.wd = WD_inst
-        self.log = WD_inst._wd_logger.getLogger( "WDMqtt" )
+        self.log = WLDLogger.get( self.__class__.__name__ )
         self.base_topic = base_topic
 
         self.log.debug( "" )

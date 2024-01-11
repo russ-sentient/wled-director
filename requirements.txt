@@ -1,3 +1,4 @@
 pyyaml
 pyyaml-include
+httpx
 

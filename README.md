@@ -5,12 +5,12 @@ I have tried to lay out the config files in as much of an intuitive way as possi
 
 TODO:
 
-10 - clean up code
-10 - finish creating modules to handle common tasks
+10 - clean up code.
+10 - finish creating modules to handle common tasks.
 8 - figure out if we want to use a modified version of python-wled or continue pushing to JSON api directly.
     Pros to python-wled:
-        - async
-        - handles everything
+        - async.
+        - handles everything.
     Cons:
-        - named variables are lengthy rendering the need for conversion from yaml ( exists in from_dict? )
+        - named variables are lengthy rendering the need for conversion from yaml ( exists in from_dict? ).
 

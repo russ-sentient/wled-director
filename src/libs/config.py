@@ -13,15 +13,17 @@ import random
 import os, pathlib
 from datetime import datetime
 
+CONFIG_DIR = f"{os.getcwd()}/config"
+
 ## config handler class.  cache data at init, only pull from os if modified date is newer than stored
 class WLDConfig():
     def __init__(self, config_name:str ) -> None:
-        self._config_file   = f"{WLDYaml.CONFIG_DIR}/{config_name}.yaml"
+        self._config_file   = f"{CONFIG_DIR}/{config_name}.yaml"
         self._log           = WLDLogger.get( f"WLDConfig({config_name})" )
         self._data          = None
         self._cfg_modified  = datetime.min
         
-        self.load()
+        #self.load()
         
     def load( self ) -> Any:
         modified = datetime.fromtimestamp( pathlib.Path( self._config_file ).stat().st_mtime )
@@ -52,7 +54,7 @@ class WLDConfig():
 ## define !rand_int in config, then when it is encountered in parsing pass we call get() method to get the value.
 ## handle all keyed random info internally.
 class WLDRandInt():
-    def __init__(self, key:str|None = None, min:int = 0, max:int = 0 ) -> None:
+    def __init__(self, key:str|None = None, min:int = 0, max:int = 1 ) -> None:
         self._key = f"INT:{key}" if isinstance(key, str ) else None
         self._min = min
         self._max = max
@@ -72,7 +74,7 @@ class WLDRandInt():
 ## dataclass for YAML !clist functionality
 ## hold static config for all instances, get lists from its cached data
 ## should we make a pick function here too?  could simplify other code
-class WLDCList():
+class WLDRandList():
     _lists = WLDConfig( "lists" )
     _log = WLDLogger.get( "WLDCList()" )  
     
@@ -82,9 +84,12 @@ class WLDCList():
     ## get one item from list ( if index is not defined should we pick at random here? )
     def get( self, list_type:str, index:int|None = None ) -> Any:
         try:
-            m_list = WLDCList._lists.load()[list_type]
+            m_list = WLDRandList._lists.load()[list_type][self._name]
         except KeyError as e:
-            self.log( e )
+            if str(e)[1:-1] == self._name:
+                self.log( f"list {e} not in lists.{list_type}" )
+            else:
+                self.log( f"list type {e} not found in lists" )
             return None
         
         if index == None:
@@ -110,37 +115,46 @@ class WLDCList():
         msg = f"[{self._name}] - {msg}"
         
         if level == "error":
-            WLDCList._log.error( msg )
+            WLDRandList._log.error( msg )
         elif level == "debug":
-            WLDCList._log.debug( msg )
+            WLDRandList._log.debug( msg )
         elif level == "warning":
-            WLDCList._log.warning( msg )
+            WLDRandList._log.warning( msg )
         else:
-            WLDCList._log.info( msg )   
+            WLDRandList._log.info( msg )   
 
 
 class WLDYaml():
-    CONFIG_DIR = f"{os.getcwd()}/config"
-    
     ## define our loader so we can over-ride __init__ to automatically add our constructors etc.
     class WLDYamlLoader( yaml.SafeLoader ):
-        def __init__(self, **kwargs ) -> None:
-            super().__init__(**kwargs)
+        def __init__(self, stream ) -> None:
+            super().__init__(stream)
 
             ## add constructors
-            self.add_constructor( "!clist", WLDYaml._clist_constructor )
+            self.add_constructor( "!rand_list", WLDYaml._rand_list_constructor )
             self.add_constructor( "!rand_int", WLDYaml._rand_int_constructor )
             
-            YamlIncludeConstructor.add_to_loader_class( WLDYaml.WLDYamlLoader, base_dir=WLDYaml.CONFIG_DIR )
+            YamlIncludeConstructor.add_to_loader_class( WLDYaml.WLDYamlLoader, base_dir=CONFIG_DIR )
         
     ## define constructors:    
     @staticmethod
-    def _clist_constructor( loader: WLDYamlLoader, node: yaml.nodes.MappingNode ) -> WLDCList:
-        return WLDCList( **loader.construct_mapping(node) ) # type: ignore
+    def _rand_list_constructor( loader: WLDYamlLoader, node: yaml.nodes.ScalarNode ) -> WLDRandList:
+        return WLDRandList( name=node.value )
     
     @staticmethod
-    def _rand_int_constructor( loader: WLDYamlLoader, node: yaml.nodes.MappingNode ) -> WLDRandInt:
-        return WLDRandInt( **loader.construct_mapping(node) ) # type: ignore
+    def _rand_int_constructor( loader: WLDYamlLoader, node: yaml.nodes.Node ) -> WLDRandInt|None:
+        if isinstance( node, yaml.nodes.MappingNode ):
+            return WLDRandInt( **loader.construct_mapping(node) ) # type: ignore
+        elif isinstance( node, yaml.nodes.ScalarNode ):
+            value = node.value
+            if str(value).isdigit():
+                return WLDRandInt( max=int(value) )
+            else:
+                return WLDRandInt( key=str(value) )
+        elif isinstance( node, yaml.nodes.SequenceNode ):
+            return WLDRandInt( key=str(node.value[0].value), min=int(node.value[1].value), max=int(node.value[2].value) )
+        
+        print( f"!rand_int constructor - error parsing node {node.start_mark}" )
     
     ## define our dumper so we can over-ride __init__ to automatically add our constructors etc.
     class WLDYamlDumper( yaml.SafeDumper ):

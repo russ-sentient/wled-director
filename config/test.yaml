@@ -1,2 +1,14 @@
-some_val:
-  sub_val: !rand_list { type: colors, name: rgb }
+colors: 
+  rgb: !rand_list rgb
+  whites: !rand_list white_all
+  blue: !rand_list blue
+numbers: 
+  one: !rand_int { min: 0, max: 100 }
+  two: !rand_int 10
+  three: !rand_int 
+    key: fof
+    max: 2000
+another_number: !rand_int { key: another, max: 100 }
+yep: !rand_int [ yep, 2, 50 ]
+yep_clone: !rand_int yep
+another_clone: !rand_int another

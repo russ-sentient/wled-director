@@ -1,5 +1,5 @@
 from paho.mqtt import client as mqtt_client
-from director import WDirector
+from wldirector.wldirector import WDirector
 from .logger import WLDLogger
 from typing import Callable
 import json

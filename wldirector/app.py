@@ -1,4 +1,4 @@
-from director import WDirector
+from wldirector.wldirector import WDirector
 
 ## MAIN STARTUP
 if __name__ == '__main__':

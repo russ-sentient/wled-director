@@ -8,8 +8,9 @@
             "name": "WLED Director",
             "type": "python",
             "request": "launch",
-            "program": "./src/app.py",
+            "program": "./app.py",
             "console": "integratedTerminal",
+            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${workspaceFolder}/wldirector/libs/${pathSeparator}${env:PYTHONPATH}"},
             "justMyCode": true
         },
         {
@@ -18,7 +19,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "env": {"PYTHONPATH": "${workspaceFolder}/src/${pathSeparator}${env:PYTHONPATH}"},
+            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${workspaceFolder}/wldirector/libs/${pathSeparator}${env:PYTHONPATH}"},
             "justMyCode": true
         },
         {
@@ -27,7 +28,7 @@
             "request": "launch",
             "program": "./tests/test.py",
             "console": "integratedTerminal",
-            "env": {"PYTHONPATH": "${workspaceFolder}/src/${pathSeparator}${env:PYTHONPATH}"},
+            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${workspaceFolder}/wldirector/libs/${pathSeparator}${env:PYTHONPATH}"},
             "justMyCode": true
         }
     ]

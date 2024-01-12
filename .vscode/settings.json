@@ -1,5 +1,5 @@
 {
     "python.analysis.autoImportCompletions": true,
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.extraPaths": ["${workspaceFolder}/src/;${workspaceFolder}/.venv/lib/python3.11/"]
+    "python.analysis.extraPaths": ["${workspaceFolder}/wldirector/;${workspaceFolder}/wldirector/libs/;${workspaceFolder}/.venv/lib/python3.11/"]
 }

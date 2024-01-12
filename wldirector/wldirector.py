@@ -916,7 +916,7 @@ class WDirector( ):
         
         atexit.register(self.__del__)
 
-        self.mqtt = WDMqtt( self, "wled_director" )
+        self.mqtt = WLDMQTT( self, "wled_director" )
 
         self.log.debug( "Pulling initial configuration data..." )
 
@@ -955,6 +955,6 @@ class WDirector( ):
 
 
 
-from libs.mqtt import WDMqtt
-from libs.logger import WLDLogger
+from helpers.mqtt import WLDMQTT
+from helpers.logger import WLDLogger
 

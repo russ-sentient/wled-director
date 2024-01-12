@@ -4,7 +4,7 @@ from .logger import WLDLogger
 from typing import Callable
 import json
 
-class WDMqtt:
+class WLDMQTT:
     ## Callbacks:
     def _wd_pick_show_now( self, client, userdata, message ):
          self.log.info( "mqtt: pick show now" )

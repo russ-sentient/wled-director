@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "./app.py",
             "console": "integratedTerminal",
-            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${workspaceFolder}/wldirector/libs/${pathSeparator}${env:PYTHONPATH}"},
+            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${env:PYTHONPATH}"},
             "justMyCode": true
         },
         {
@@ -19,16 +19,16 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${workspaceFolder}/wldirector/libs/${pathSeparator}${env:PYTHONPATH}"},
+            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${env:PYTHONPATH}"},
             "justMyCode": true
         },
         {
-            "name": "Test.py",
+            "name": "Test - Config.py",
             "type": "python",
             "request": "launch",
-            "program": "./tests/test.py",
+            "program": "./tests/config.py",
             "console": "integratedTerminal",
-            "env": {"PYTHONPATH": "${workspaceFolder}/wldirector/${pathSeparator}${workspaceFolder}/wldirector/libs/${pathSeparator}${env:PYTHONPATH}"},
+            "env": {"PYTHONPATH": "${workspaceFolder}${pathSeparator}${env:PYTHONPATH}"},
             "justMyCode": true
         }
     ]

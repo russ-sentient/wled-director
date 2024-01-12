@@ -1,4 +1,5 @@
-from libs.config import *
+
+from wldirector.config import models
 from time import sleep
 
 ## debug our new data handlers
@@ -10,10 +11,8 @@ def trace_object( obj, indent = 0 ) -> None:
     elif isinstance( obj, list ):
         for value in obj:
             trace_object( value, indent+2 )
-    elif isinstance( obj, WLDRandInt ):
+    elif isinstance( obj, models.WLDBaseModel ):
         print( " "*indent, obj.get() )
-    elif isinstance( obj, WLDRandList ):
-        print( " "*indent, obj.get( 'colors' ) )
     else:
         print( " "*indent, obj )
 
@@ -30,4 +29,4 @@ if __name__ == "__main__":
         sleep( 5.0 )
 
 
-    
+from wldirector.config.handler import WLDConfig

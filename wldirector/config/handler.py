@@ -2,7 +2,7 @@
 ## - Try to find a way to pass the parent key to the constructor to use with this ( list can handle category, random can have automatic keys, etc )
 from typing import Any
 import yaml
-from logger import WLDLogger
+from wldirector.helpers.logger import WLDLogger
 import os, pathlib
 from datetime import datetime
 from config.yaml import WLDYaml

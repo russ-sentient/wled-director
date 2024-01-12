@@ -1,28 +1,25 @@
 from typing import Any 
-from config.handler import WLDConfig 
-from logger import WLDLogger  
+from .model import WLDBaseModel 
 import random
-
-## dataclass for YAML !clist functionality
-## hold static config for all instances, get lists from its cached data
-## should we make a pick function here too?  could simplify other code
 
 ## FIXME: we should pass all info on initialization and check validity.  take optional param index for static list addressing.  Add a parser to pull a range. 
 ## TODO: consider using regexp to parse complicated scalars instead of writing messy mapppings.  ie: !list 
         
-class WLDRandList():
-    _lists = WLDConfig( "lists", load=False )
-    _log = WLDLogger.get( "WLDCList()" )  
+class WLDRandList(WLDBaseModel):
+    _lists = None
     
     def __init__(self, name:str ) -> None:
-        self._name = name
+        if WLDRandList._lists == None:
+            WLDRandList._lists = WLDConfig( "lists", load=False )
+            
+        self._data['name'] = name
         
     ## get one item from list ( if index is not defined should we pick at random here? )
     def get( self, list_type:str, index:int|None = None ) -> Any:
         try:
-            m_list = WLDRandList._lists.load()[list_type][self._name]
+            m_list = WLDRandList._lists.load()[list_type][self._data['name']]
         except KeyError as e:
-            if str(e)[1:-1] == self._name:
+            if str(e)[1:-1] == self._data['name']:
                 self.log( f"list {e} not in lists.{list_type}" )
             else:
                 self.log( f"list type {e} not found in lists" )
@@ -46,22 +43,5 @@ class WLDRandList():
             else:
                 self.log( "index supplied for non-iterable list, returning None" )
                 return None
-            
-            
-    def log( self, msg:Any, level:str = "error" ) -> None:
-        msg = f"[{self._name}] - {msg}"
-        
-        if level == "error":
-            WLDRandList._log.error( msg )
-        elif level == "debug":
-            WLDRandList._log.debug( msg )
-        elif level == "warning":
-            WLDRandList._log.warning( msg )
-        else:
-            WLDRandList._log.info( msg ) 
 
-
-
-
-
-        
+from ..handler import WLDConfig 

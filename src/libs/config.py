@@ -17,13 +17,14 @@ CONFIG_DIR = f"{os.getcwd()}/config"
 
 ## config handler class.  cache data at init, only pull from os if modified date is newer than stored
 class WLDConfig():
-    def __init__(self, config_name:str ) -> None:
+    def __init__(self, config_name:str, load:bool=True ) -> None:
         self._config_file   = f"{CONFIG_DIR}/{config_name}.yaml"
         self._log           = WLDLogger.get( f"WLDConfig({config_name})" )
         self._data          = None
         self._cfg_modified  = datetime.min
-        
-        #self.load()
+
+        if load:
+            self.load()
         
     def load( self ) -> Any:
         modified = datetime.fromtimestamp( pathlib.Path( self._config_file ).stat().st_mtime )
@@ -31,11 +32,14 @@ class WLDConfig():
         if modified > self._cfg_modified:
             try:
                 with open( self._config_file ) as cfg_file:
+                    self._log.debug( "Caching .yaml" )
                     self._data = yaml.load( cfg_file, Loader=WLDYaml.WLDYamlLoader )
+                    self._cfg_modified = modified
             except Exception as e:
                 self._log.error( e )
                 
         ## we do not want to return a mutable reference to our private data, send a copy
+        self._log.debug( "Loading from cache" )
         return ( self._data.copy() if isinstance(self._data, (dict|list)) else self._data )
     
     
@@ -49,6 +53,8 @@ class WLDConfig():
             self._log.error( e )
             
         return False
+    
+## TODO: we should write a base WLDModel class so we can call get generically from parse function.
         
 ## dataclass for YAML !rand_int functionality
 ## define !rand_int in config, then when it is encountered in parsing pass we call get() method to get the value.
@@ -74,15 +80,19 @@ class WLDRandInt():
 ## dataclass for YAML !clist functionality
 ## hold static config for all instances, get lists from its cached data
 ## should we make a pick function here too?  could simplify other code
+        
+## FIXME: we should pass all info on initialization and check validity.  take optional param index for static list addressing.  Add a parser to pull a range. 
+## TODO: consider using regexp to parse complicated scalars instead of writing messy mapppings.  ie: !list 
+        
 class WLDRandList():
-    _lists = WLDConfig( "lists" )
+    _lists = WLDConfig( "lists", load=False )
     _log = WLDLogger.get( "WLDCList()" )  
     
     def __init__(self, name:str ) -> None:
         self._name = name
         
     ## get one item from list ( if index is not defined should we pick at random here? )
-    def get( self, list_type:str, index:int|None = None ) -> Any:
+    def get( self, list_type:str, index:int|None|WLDRandInt = None ) -> Any:
         try:
             m_list = WLDRandList._lists.load()[list_type][self._name]
         except KeyError as e:
@@ -103,13 +113,19 @@ class WLDRandList():
                 self.log( "can't pick from non-iterable list, returning None" )
                 return None
         else:
+            if isinstance( index, WLDRandInt ):
+                idx = index.get()
+            else:
+                idx = index
+
             if isinstance( m_list, list ):
-                return m_list[index%len(m_list)]
+                return m_list[idx%len(m_list)]
             elif isinstance( m_list, dict ):
-                return tuple(m_list.keys())[index%len(m_list)]
+                return tuple(m_list.keys())[idx%len(m_list)]
             else:
                 self.log( "index supplied for non-iterable list, returning None" )
                 return None
+            
             
     def log( self, msg:Any, level:str = "error" ) -> None:
         msg = f"[{self._name}] - {msg}"
@@ -121,8 +137,33 @@ class WLDRandList():
         elif level == "warning":
             WLDRandList._log.warning( msg )
         else:
-            WLDRandList._log.info( msg )   
+            WLDRandList._log.info( msg ) 
 
+## replace weighted pick with this?  same as list but we define the weighted choices after the !pick tag
+class WLDPick():
+    def __init__(self) -> None:
+        pass
+
+## random hue ( with offset? )
+class WLDRandHue():
+    def __init__(self) -> None:
+        pass
+
+## manual hue
+class WLDHue():
+    def __init__(self) -> None:
+        pass
+
+## tag to copy another host/groups data
+## TODO: pass list of keys from parse function to pull same data from GET()
+class WLDCopy():
+    ## pass this in when we init director:
+    _hosts = None
+    ## pass this in as we parse a preset:
+    _groups = None
+
+    def __init__(self) -> None:
+        pass
 
 class WLDYaml():
     ## define our loader so we can over-ride __init__ to automatically add our constructors etc.

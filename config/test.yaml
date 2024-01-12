@@ -1,7 +1,8 @@
 colors: 
   rgb: !rand_list rgb
-  whites: !rand_list white_all
-  blue: !rand_list blue
+  whites: !rand_list 
+    name: white_all
+  blue: !rand_list xmas_rgw
 numbers: 
   one: !rand_int { min: 0, max: 100 }
   two: !rand_int 10

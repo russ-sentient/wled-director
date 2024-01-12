@@ -1,4 +1,5 @@
 from libs.config import *
+from time import sleep
 
 ## debug our new data handlers
 def trace_object( obj, indent = 0 ) -> None:
@@ -20,11 +21,13 @@ def trace_object( obj, indent = 0 ) -> None:
 
 if __name__ == "__main__":
     config = WLDConfig( "test" )
-    
-    data = config.load()
 
-    trace_object( data )
-
+    while True:
+        print( "=========================================" )
+        data = config.load()
+        print( "=========================================")
+        trace_object( data )
+        sleep( 5.0 )
 
 
     

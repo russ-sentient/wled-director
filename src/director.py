@@ -457,14 +457,11 @@ class WDirector( ):
 
     ## called every tick, handle any operation logic here ( handle timeout retries, pick new shows, handle animating shows )
     def Update( self ):
+        now = datetime.now()
+
         if self.mqtt.wd_pull_config:
             self.pullConfig()
             self.mqtt.wd_pull_config = False
-
-        if self.show_type == "disabled":
-            if len(self.wled_data):
-                self.turnOff()
-            return
 
         if self.mqtt.wd_pick_show:
             self.time_pick_show = datetime.now()
@@ -475,17 +472,34 @@ class WDirector( ):
                 self.time_animate = datetime.now()
             self.mqtt.wd_animate = False
 
-        now = datetime.now()
-
         if now.second % 5 == 0:
-            self.log.debug( f"Next show: {(self.time_pick_show-now).total_seconds()}s" )
+            self.log.debug( f"Next show: {round((self.time_pick_show-now).total_seconds(),1)}s" )
             if self.time_animate:
-                self.log.debug( f"Animate: {(self.time_animate-now).total_seconds()}s" )
+                self.log.debug( f"Animate: {round((self.time_animate-now).total_seconds(),1)}s" )
 
         if self.time_pick_show <= now:
+            if self.show_type == "disabled":
+                self.turnOff() ## calls initWLEDData()
+
+                self.time_pick_show = now + timedelta( seconds=30.0 )
+                self.mqtt.sendTimes( {'pick_show': 30.0 } )
+
+                self.mqtt.Publish( 'status/show_type', self.show_type )
+                self.mqtt.Publish( 'status/show_name', "OFF" )
+
+                return
+            
             if self.pullConfig() and self.pickShow():
-                self.time_pick_show = now + self.show_duration
-                self.time_animate = self.animate_duration + now
+                show_duration = self.show_duration * self.mqtt.wd_show_duration
+                self.time_pick_show = now + show_duration
+
+                if self.animate_duration < self.show_duration:
+                    animate_duration = self.animate_duration * self.mqtt.wd_show_duration
+                    self.time_animate = now + animate_duration
+                    self.mqtt.sendTimes( times={ "pick_show": show_duration.total_seconds(), 'animate':animate_duration.total_seconds() } )
+                else: 
+                    self.time_animate = now + self.animate_duration
+                    self.mqtt.sendTimes( times={ "pick_show": show_duration.total_seconds(), 'animate':0.0 } )
 
                 self.time_retry = timedelta( seconds=self.config['settings']['wled_retry']['seconds'] ) + now
 
@@ -500,7 +514,13 @@ class WDirector( ):
             self.Animate()
             self.update_lights( self.wled_data )
 
-            self.time_animate = self.animate_duration + now
+            if self.animate_duration < self.show_duration:
+                animate_duration = self.animate_duration * self.mqtt.wd_show_duration
+                self.time_animate = now + animate_duration
+                self.mqtt.sendTimes( times={'animate':animate_duration.total_seconds()} )
+            else: 
+                self.time_animate = now + self.animate_duration
+                self.mqtt.sendTimes( times={'animate':0.0} )
 
             if ( self.time_pick_show - self.time_animate ) < self.animate_duration:
                 self.time_animate = None

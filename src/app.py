@@ -7,5 +7,4 @@ if __name__ == '__main__':
 
     while( True ):
         director.Update()
-        
         time.sleep( 1 )

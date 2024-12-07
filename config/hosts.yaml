@@ -3,7 +3,7 @@ tree-in:
   segments: 1
   type: string
   bri: 255
-  disabled: True
+  disabled: False
 
 porch:
   hostname: http://wled-porch.knet
@@ -16,7 +16,7 @@ garage:
   segments: 1
   type: strip
   bri: 200
-  disabled: True
+  disabled: False
 
 deck:
   hostname: http://wled-deck.knet
@@ -47,4 +47,4 @@ angel:
   segments: 1
   type: string
   bri: 200
-  disabled: True
+  disabled: False

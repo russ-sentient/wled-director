@@ -2,6 +2,8 @@ from paho.mqtt import client as mqtt_client
 from director import WDirector
 from .logger import WLDLogger
 from typing import Callable
+from datetime import timedelta
+from math import floor
 import json
 
 class WDMqtt:
@@ -11,16 +13,21 @@ class WDMqtt:
          self.wd_pick_show = True
 
     def _wd_animate_now( self, client, userdata, message ):
-         self.log.info( "animate now" )
+         self.log.info( "mqtt: animate now" )
          self.wd_animate = True
 
     def _wd_pull_config_now( self, client, userdata, message ):
-         self.log.info( "pull_config now" )
+         self.log.info( "mqtt: pull_config now" )
          self.wd_pull_config = True
+
+    def _wd_set_show_duration( self, client, userdata, message ):
+        self.log.info( "mqtt: set show duration" )
+        self.wd_show_duration = float( message.payload.decode() ) / 100
+        self.log.info( f"show duration: {self.wd_show_duration}")
 
     def _wd_show_type( self, client, userdata, message ):
         payload = message.payload.decode()
-        self.log.info( f"{payload=}" )
+        self.log.info( f"mqtt: {payload=}" )
 
         if len(payload) == 0:
             self.log.error( "received empty payload, returning..." )
@@ -35,9 +42,9 @@ class WDMqtt:
                 self.wd.show_type = payload
                 self.wd_pick_show = True
             else:
-                self.log.error( "show_type not in wd.config.shows!")
+                self.log.error( "show_type not in wd.config.shows!" )
         else:
-            self.log.warning( "payload == current show, returning...")
+            self.log.warning( "payload == current show, returning..." )
 
 
     ## Class methods:
@@ -48,12 +55,43 @@ class WDMqtt:
             else:
                 self.log.error("Failed to connect, return code %d\n", rc)
 
+        def on_disconnect( client, userdata, flags, rc):
+            self.log.error( "MQTT Disconnected, attempting to reconnect..." )
+            self.Connect()
+
         client = mqtt_client.Client("wled_director")
         client.username_pw_set('wled', 'horse-whale-23' )
         client.on_connect = on_connect
-        client.connect('10.10.0.14', 1883)
+        client.on_disconnect = on_disconnect
+        client.connect('10.0.50.41', 1883)
 
         self.client = client
+
+    def formatTime( self, seconds:float ) -> str:
+        ## format from seconds float into HA compatible timer string.
+        ## 'HH:MM:SS.F'
+
+        h = 0
+        m = 0
+        s = 0.0
+
+        if seconds >= (60*60):
+            h = floor( seconds / (60*60) )
+            seconds -= h * 60 * 60
+        
+        if seconds >= 60:
+            m = floor( seconds / 60 )
+            seconds -= m * 60
+
+        s = round( seconds, 1 )
+
+        return f"{h:02}:{m:02}:{s:04.1f}"
+
+    def sendTimes( self, times:dict ) -> None:
+        if 'animate' in times:
+            self.Publish( topic="status/animate_timer", data=self.formatTime( times['animate'] ) )
+        if 'pick_show' in times:
+            self.Publish( topic="status/pick_show_timer", data=self.formatTime( times['pick_show'] ) )
 
     def Publish( self, topic:str, data ) -> None:
         str_data = ""
@@ -77,10 +115,11 @@ class WDMqtt:
 
     def startLoop(self):
         self.log.debug( "Starting MQTT event loop..." )
-        self.Subscribe( ['pick_show', 'animate', 'show_type' ] )
+        self.Subscribe( ['pick_show', 'animate', 'show_type', 'show_duration' ] )
         self.addCallback( 'pick_show', self._wd_pick_show_now )
         self.addCallback( 'animate', self._wd_animate_now )
         self.addCallback( 'show_type', self._wd_show_type )
+        self.addCallback( 'show_duration', self._wd_set_show_duration )
         self.client.loop_start()
 
     def __init__( self, WD_inst:WDirector, base_topic:str  ):
@@ -93,6 +132,7 @@ class WDMqtt:
         self.wd_animate = False
         self.wd_pick_show = False
         self.wd_pull_config = False
+        self.wd_show_duration = 1.0
 
         self.Connect()
 

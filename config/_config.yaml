@@ -9,6 +9,7 @@ settings:
 debug:
   show_data: False
   parse_data: False
+  animate: False
   update_lights: False
   wled_post: False
 
@@ -26,12 +27,14 @@ defaults:
         ix: 0
         spc: 0
         grp: 1
+        on: True
         rev: False
         mi: False
+        frz: False
 
   angel:
     hosts: angel
-    preset: $list(angel_neutral)
+    preset: $list(angel_still_neutral)
 
 
 hosts: !include hosts.yaml
@@ -44,6 +47,7 @@ presets: !include presets.yaml
 shows:
   fireworks:  !include shows/fireworks.yaml
   xmas:       !include shows/christmas.yaml
+  halloween:  !include shows/halloween.yaml
 
   warm_white:
     solid_white:

@@ -59,7 +59,7 @@ class WDMqtt:
             self.log.error( "MQTT Disconnected, attempting to reconnect..." )
             self.Connect()
 
-        client = mqtt_client.Client("wled_director")
+        client = mqtt_client.Client( mqtt_client.CallbackAPIVersion.VERSION1, "wled_director" )
         client.username_pw_set('wled', 'horse-whale-23' )
         client.on_connect = on_connect
         client.on_disconnect = on_disconnect
@@ -115,11 +115,12 @@ class WDMqtt:
 
     def startLoop(self):
         self.log.debug( "Starting MQTT event loop..." )
-        self.Subscribe( ['pick_show', 'animate', 'show_type', 'show_duration' ] )
+        self.Subscribe( ['pick_show', 'animate', 'show_type', 'show_duration', 'pull_config' ] )
         self.addCallback( 'pick_show', self._wd_pick_show_now )
         self.addCallback( 'animate', self._wd_animate_now )
         self.addCallback( 'show_type', self._wd_show_type )
         self.addCallback( 'show_duration', self._wd_set_show_duration )
+        self.addCallback( 'pull_config', self._wd_pull_config_now )
         self.client.loop_start()
 
     def __init__( self, WD_inst:WDirector, base_topic:str  ):

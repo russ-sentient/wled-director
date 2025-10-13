@@ -1,34 +1,60 @@
 tree-in:
   hostname: http://wled-tree-in.knet
-  segments: 1
   type: string
+  disabled: True
+
+  ## rework this from default values
   bri: 255
-  disabled: False
+  segments: 1
+
+  default:
+    bri: 255
+    seg:
+      - n: 'Main'
+        start: 0
+        stop: 200
 
 porch:
   hostname: http://wled-porch.knet
+  type: string
+
+  bri: 255
   segments: 1
-  type: strip
-  bri: 200
+
+  default:
+    bri: 255
+    seg:
+      - n: 'Main'
+        start: 0
+        stop: 201 # includes extra pixels for garage spoofing
 
 garage:
   hostname: http://wled-garage.knet
-  segments: 1
-  type: strip
-  bri: 200
-  disabled: False
-
-deck:
-  hostname: http://wled-deck.knet
-  segments: 1
   type: string
+
   bri: 255
+  segments: 1
+
+  default:
+    bri: 255
+    seg:
+      - n: 'Main'
+        start: 0
+        stop: 201 # incluedes extra pixels for porch spoofing
 
 tree-out:
   hostname: http://wled-tree-out.knet
-  segments: 1
   type: string
-  bri: 255
+
+  bri: 200
+  segments: 1
+
+  default:
+    bri: 200
+    seg:
+      - n: 'Main'
+        start: 0
+        stop: 100
 
 puck:
   hostname: http://wled-puck.knet
@@ -36,15 +62,44 @@ puck:
   type: strip
   disabled: True
 
+  default:
+    seg:
+      - n: 'Main'
+        start: 0
+        stop: 36 ## <- verify this
+
 trees-small:
   hostname: http://wled-secondary-trees.knet
-  segments: 2
   type: string
+  disabled: True
+
   bri: 255
+  segments: 2
+
+  default:
+    bri: 255
+    seg:
+      - n: 'Tree1'
+        start: 0
+        stop: 62
+      - n: 'Tree2'
+        start: 62
+        stop: 124
 
 angel:
   hostname: http://wled-tree-angel.knet
-  segments: 1
   type: string
+  disabled: True
+
   bri: 200
-  disabled: False
+  segments: 1
+
+  default:
+    bri: 200
+    ledmap: 0
+    seg:
+      - n: 'Main'
+        start: 0
+        stop: 16
+        frz: False
+        on: True

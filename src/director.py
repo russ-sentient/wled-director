@@ -2,8 +2,9 @@ import yaml, httpx, random, copy, colorsys, re, json
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
-from yamlinclude import YamlIncludeConstructor
-YamlIncludeConstructor.add_to_loader_class(loader_class=yaml.FullLoader, base_dir='./config' )
+import yaml_include
+
+yaml.add_constructor("!include", yaml_include.Constructor(base_dir='./config'))
 
 import atexit
 
@@ -103,14 +104,36 @@ class WDirector( ):
             return r.json()
 
         return None
+    
+
+    def getDefaultSegmentCount( self, host:str ):
+        if host in self.config['hosts'] and 'default' in self.config['hosts'][host] and 'seg' in self.config['hosts'][host]['default']:
+            return len(self.config['hosts'][host]['default']['seg'])
+        else:
+            self.log.warning( f"{host} not in self.config['hosts'] or contains no default segments, returning 1 segment - check config!" )
+            return 1
 
 
     ## trim/duplicate segment data based on segment count in host definition.
+
     def fix_segments( self, data:dict, host:str ):
         # adjust segments to light ( trim/duplicate )
-        wled_segs = self.config['hosts'][host]['segments']
-        #data = copy.deepcopy( self.wled_data[host] )
+        if isinstance( data['seg'], dict ): return
+
+        wled_segs = self.getDefaultSegmentCount( host )
+
+        self.log.debug( f"{host}: {data}")
+
+        custom_segs = 0
+        for i, segment in enumerate(data['seg']):
+            self.log.debug( f"{host}({i}): {segment}")
+            if i < wled_segs: continue
+            if "start" in segment and "stop" in segment:
+                custom_segs += 1
+
         data_segs = len( data['seg'] )
+        self.log.debug( f"{host}: {data_segs=}, {wled_segs=}, {custom_segs=}" )
+        wled_segs += custom_segs
 
         if wled_segs > data_segs:
             for i in range( data_segs, wled_segs ):
@@ -119,10 +142,26 @@ class WDirector( ):
             for i in range( wled_segs, data_segs ):
                 data['seg'].pop(wled_segs)
 
+        ## auto populate opposite spc and grp # WIP
+        ## HACK: just do porch and garage for now
+        if host in ['porch','garage']:
+            blank_segs = []
+
+            for seg in data['seg']:
+                if "spc" in seg:
+                    spc = seg['spc']
+
+                    if spc > 0:
+                        blank_segs.append( { "start":0, "stop":self.config['hosts'][host]['default']['seg'][0]['stop'], "fx":0, "pal":0, "col":["000000","000000","000000"], "spc": 1, "of": 1, "grp": spc } )
+        
+            if len( blank_segs ):
+                data['seg'].extend( blank_segs )
+                self.log.debug( f"{host} - {blank_segs}" )
+
 
     ## send data to all of the wled instances
     # @pyscript_compile
-    def update_lights( self, wled_data ):
+    def update_lights( self, wled_data, simple:bool = False ):
         req_hosts = []
         req_data = []
 
@@ -133,24 +172,28 @@ class WDirector( ):
                 self.log.error( f"{host} not in config.hosts" )
                 continue
 
-            host_config = self.config['hosts'][host]
+            if debug_me: 
+                self.log.debug( f"wled_data[{host}] (pre bri)= {data}")
+
+            host_config = dict( self.config['hosts'][host] )
 
             if 'disabled' in host_config and host_config['disabled']:
                 continue
 
-            if 'strip' in data:
-                if 'type' in host_config and host_config['type'] == 'strip':
-                    self.parseData( data['strip'], "ul_strips" )
-                    self.mergeWLEDData( data['strip'], data )
-                del data['strip']
+            if not simple:
+                if 'strip' in data:
+                    if 'type' in host_config and host_config['type'] == 'strip':
+                        self.parseData( data['strip'], "ul_strips" )
+                        self.mergeWLEDData( data['strip'], data )
+                    del data['strip']
 
-            if 'bri' in host_config and 'bri' not in data:
-                data['bri'] = host_config['bri']
+                if 'bri' in host_config and 'bri' not in data:
+                    data['bri'] = host_config['bri']
 
-            self.fix_segments( data, host )
+                self.fix_segments( data, host )
 
             if debug_me: 
-                self.log.debug( f"wled_data[{host}]= {data}")
+                self.log.debug( f"wled_data[{host}](post bri)= {data}")
 
             req_hosts.append( host_config['hostname'] )
             req_data.append( data )
@@ -238,7 +281,7 @@ class WDirector( ):
 
     ## scan final preset data structure and replace special tags / proper names with raw data so we can send it to WLED
     def parseData( self, data:dict, group:str ):
-        if 'seg' not in data:
+        if 'seg' not in data or isinstance( data['seg'], dict ):
             return
         
         segs = data['seg']
@@ -246,6 +289,15 @@ class WDirector( ):
         for i_seg in range(len(data['seg'])):
 
             seg = segs[i_seg]
+
+            if 'copy' in seg:
+                ## try to copy info from another segment and merge it.
+                copy_host = str(seg['copy'])
+
+                if copy_host in self.wled_data:
+                    data['seg'][i_seg].update(self.pullSyncData( self.wled_data[copy_host]['seg'][0] ))
+                    self.linked_copies[group] = copy_host
+                    continue
 
             ## look for named effects and replace with index
 
@@ -350,6 +402,7 @@ class WDirector( ):
                 self.log.info( f"col: {seg['col']}" )
 
                 if isinstance( seg['col'], str ):
+
                     if seg['col'].startswith( "$list" ):
                         rb = re.findall( '[(](.*?)[)]', seg['col'] )
 
@@ -506,7 +559,7 @@ class WDirector( ):
                 self.update_lights( self.wled_data )
                 ##
             else:
-                self.log.warning( "pick_show() returned None, retry in 10s" )
+                self.log.warning( "pickShow() or pullConfig() failed, retry in 10s" )
                 self.time_pick_show = now + timedelta( seconds = 10 )
                 self.time_retry = None
 
@@ -602,7 +655,26 @@ class WDirector( ):
             dest[k] = v
 
         if 'seg' in src and 'seg' in dest:
+            if isinstance( src['seg'], dict ) and 'i' in src['seg']:
+                dest['seg'] = src['seg']
+                dest = copy.deepcopy( dest )
+                return
+            
             src_segs = len( src['seg'] )
+            dest_segs = len( dest['seg'] )
+
+            if src_segs > dest_segs:
+                ## HACK: fix custom segments temporarily
+                custom_cnt = 0
+                for seg in src['seg']:
+                    if 'start' in seg and 'stop' in seg:
+                        custom_cnt += 1
+
+                if custom_cnt:
+                    self.log.debug( f"custom segments detected, adding to destination" )
+                    for i in range(dest_segs,src_segs):
+                        dest['seg'].append( copy.deepcopy( src['seg'][i] ) )
+
             dest_segs = len( dest['seg'] )
 
             ## loop through destination.  If we have more destination segments, duplicate source, if less truncate:
@@ -636,11 +708,13 @@ class WDirector( ):
         
         self.keyed_randoms.clear()
         self.wled_errors.clear()
+        old_wled_data = copy.deepcopy( self.wled_data )
         self.wled_data.clear()
 
         self.wled_retry_count = self.config['settings']['wled_retry']['count']
         self.time_retry = None
 
+        debug_me = self.config['debug']['animate']
         show_data = self.config['shows'][self.show_type][self.show]
 
         if 'groups' not in show_data:
@@ -658,7 +732,11 @@ class WDirector( ):
             self.log.info( f"GROUP: {g_name}")
 
             animate_data = copy.deepcopy( g_data['animate'] )
+            if debug_me:
+                self.log.debug( f"DATA Pre Parse: {animate_data}")
             self.parseData( animate_data, g_name )
+            if debug_me:
+                self.log.debug( f"DATA Pre Parse: {animate_data}")
 
             hosts = []
 
@@ -694,8 +772,30 @@ class WDirector( ):
                         hosts.append( host )
 
             for host in hosts:
-                self.wled_data[host] = animate_data
+                self.wled_data[host] = copy.deepcopy(animate_data)
 
+        for c_group, c_host in self.linked_copies.items():
+            if c_group == 'angel':
+                segs = old_wled_data[c_group]['seg']
+
+                for i,seg in enumerate(segs):
+                    if 'copy' in seg:
+                        print( 'angel copy seg found' )
+                        self.wled_data[c_group] = old_wled_data[c_group]
+                        copy_host = seg['copy']
+                        if copy_host in self.wled_data:
+                            self.wled_data[c_group]['seg'][i].update( self.pullSyncData( self.wled_data[copy_host]['seg'][0] ) )
+                        else:
+                            self.log.error( f"Error with copy function: \n{self.show_type=}\n{self.linked_copies=}\n{seg=}")
+
+    def pullSyncData( self, seg_data:dict ) -> dict:
+        ret_data = dict()
+        copy_fields = [ 'col', 'fx', 'pal', 'ix', 'sx', 'rev', 'mi' ]
+        for field in copy_fields:
+            if field in seg_data:
+                ret_data[field] = seg_data[field]
+
+        return copy.deepcopy( ret_data )
 
     def pickShow( self ) -> bool:
         self.log.info( "NEW SHOW ================================")
@@ -756,7 +856,9 @@ class WDirector( ):
                 else:
                     self.animate_duration = timedelta( seconds=show_data['animate'] )
 
-            if 'angel' not in show_data['groups']:
+
+            ## TODO: fix this, we need to search down into the groups and figure out if angel is included in hosts.
+            if not self.config['hosts']['angel']['disabled'] and 'angel' not in show_data['groups']:
                 show_data['groups']['angel'] = self.config['defaults']['angel']
 
             ## loop through groups:
@@ -779,10 +881,10 @@ class WDirector( ):
                 if 'hosts' not in g_data:
                     if g_name in self.config['hosts']:
                         hosts.append( g_name )
-                        self.log.warning( f"self.config.shows.{show_type}.{self.show}.{g_name} has no hosts, using group name {g_name}" ) 
+                        self.log.info( f"self.config.shows.{show_type}.{self.show}.{g_name} has no hosts, using group name {g_name}" ) 
                     elif g_name in self.config['lists']['hosts']:
                         hosts += self.config['lists']['hosts'][g_name]
-                        self.log.warning( f"self.config.shows.{show_type}.{self.show}.{g_name} has no hosts, using group name {g_name} as host list" ) 
+                        self.log.info( f"self.config.shows.{show_type}.{self.show}.{g_name} has no hosts, using group name {g_name} as host list" ) 
                     else:
                         self.log.error( f"self.config.shows.{show_type}.{self.show}.{g_name} has no hosts and group name isn't in config.hosts!")
                         continue
@@ -803,24 +905,48 @@ class WDirector( ):
                         rb = re.findall( "[(](.*?)[)]", g_data['preset'] )
                         rx = re.findall( "<(.*?)>", g_data['preset'] )
 
+                        ## FIXME: could cause undesired effects if we want to re-roll this during this show.
                         ## see if we have a random key, if not use the group name
                         if not len( rx ):
-                            rx = g_name
+                            rx = [ g_name ]
 
-                        p_key = f"{rx}%PRESET"
+                        p_key = f"{rx[0]}%PRESET"
+
                         if p_key in self.keyed_randoms:
                             preset = self.keyed_randoms[p_key]
 
-                        elif len( rb ):
-                            if rb[0] not in self.config['lists']['presets']:
-                                self.log.error( f"{rb[0]}({l_name}) not in self.config.lists.presets")
-                                return False
+                        elif len( rb ) > 0:
+                            self.log.debug( f"rb: {rb}")
+                            pick_list = {}
+
+                            for item in rb:
+                                # add single preset to base list with probability ex: (random_rgb%50)
+                                if item.find("%") >= 0:
+                                    spl = item.split("%", maxsplit=1)
+                                    if spl[0] not in self.config['presets']:
+                                        self.log.error( f"({item}) - '{spl[0]}' is not a valid preset")
+                                        continue
+                                    
+                                    if spl[1].find( "test" ) >= 0:
+                                        prob = "test"
+                                    else:
+                                        try:
+                                            prob = int( spl[1] )
+                                        except:
+                                            self.log.error( f"({item}) - '{spl[1]}' value after % must be integer" )
+                                            continue
+
+                                    pick_list[spl[0]] = prob
+                                elif item in self.config['lists']['presets']:
+                                    pick_list.update( self.config['lists']['presets'][item] )
+                                else:
+                                    self.log.error( f"({item}) - not valid, check config" )
                             
-                            preset = self.weightedPick( self.config['lists']['presets'][rb[0]] )
+                            preset = self.weightedPick( pick_list )
                             self.keyed_randoms[p_key] = preset
 
                         else:
-                            self.log.error( f"{l_name} must be in format '$list(list_name)<key>'" )
+                            self.log.error( f"{l_name} must be in format '$list<key>(list_name)(preset%percentage)'" )
                             return False
 
                     else:
@@ -831,6 +957,7 @@ class WDirector( ):
                     if preset not in self.config['presets']:
                         self.log.error( f"self.config.shows.{show_type}.{self.show}.{g_name}.{preset} not in config.presets!")
                     else:
+                        ## FIXME: this kills custom segments!
                         self.mergeWLEDData( copy.deepcopy( self.config['presets'][preset] ), my_data )
 
                         if debug_me:
@@ -885,6 +1012,7 @@ class WDirector( ):
 
                 for host in hosts:
                     if data and host in self.wled_data:
+                        print( "ANNDDD CRASH!" )
                         self.mergeWLEDData( data, self.wled_data[host] )
                     else:
                         self.wled_data[host] = copy.deepcopy(my_data)
@@ -900,8 +1028,49 @@ class WDirector( ):
     # def ha_pull_config_now( self ):
     #     self.ha_pull_config = True
 
+    def initWLEDSegments( self ):
+        ## maybe we just push default segment information to all wled nodes...
+        
+        my_wledData = {}
+
+        for k in self.config['hosts']:
+            # self.log.debug( f"{k}")
+
+            if 'disabled' in self.config['hosts'][k] and self.config['hosts'][k]['disabled']:
+                continue
+
+            host_config = self.config['hosts'][k]
+
+            if 'default' in host_config: ## here we go - new segment setup
+                my_wledData[k] = {}
+
+                for tag in host_config['default']:
+                    if tag in ['seg', 'bri']: continue
+                    my_wledData[k][tag] = host_config['default'][tag]
+
+                segments = list( host_config['default']['seg'] )
+
+                ## black out default segments
+                if self.config['settings']['blank_all_hosts'] or self.show_type == "disabled":
+                    for seg in segments:
+                        seg.update({ "pal": 0, "col": [[0,0,0],[0,0,0],[0,0,0]], "grp": 1, "spc": 0 })
+
+                ## delete any additional segments
+                for i in range(len(segments),10):
+                    segments.append( {'stop':0} )
+
+                my_wledData[k]['seg'] = list(segments)
+
+                # self.log.debug( f"{k} - {my_wledData[k]}")
+            else:
+                self.log.error( f"host '{k}' - does not contain default parameter!" )
+
+        self.update_lights( my_wledData, simple=True )
 
     def initWLEDData( self ):
+        ## default segment data:
+        self.initWLEDSegments()
+
         # clear retained data from last show
         self.wled_errors.clear()
         self.keyed_randoms.clear()
@@ -914,6 +1083,8 @@ class WDirector( ):
         self.wled_data.clear()
         self.last_data.clear()
 
+        self.linked_copies.clear()
+
         ## hack for over-riding forced animation colors
         self.group_data = None
 
@@ -921,7 +1092,7 @@ class WDirector( ):
             for k in self.config['hosts']:
                 self.wled_data[k] = { 'seg': [] }
 
-                for i in range( self.config['hosts'][k]['segments'] ):
+                for i in range( self.getDefaultSegmentCount(k) ):
                     self.wled_data[k]['seg'].append( { "pal": 0, "col": [[0,0,0],[0,0,0],[0,0,0]], "grp": 1, "spc": 0 } )
 
     def __del__( self ):
@@ -951,6 +1122,7 @@ class WDirector( ):
         self.wled_data = dict()
         self.last_data = dict()
         self.wled_errors = dict()
+        self.linked_copies = dict()
 
         self.keyed_randoms = dict()
 
@@ -971,8 +1143,6 @@ class WDirector( ):
         self.initWLEDData()
 
         self.log.debug( "Initialization complete!" )
-
-
 
 
 from libs.mqtt import WDMqtt

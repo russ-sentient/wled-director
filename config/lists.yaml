@@ -73,9 +73,25 @@ presets:
     chase3: 50
     flow_multi: 50
 
-  angel_neutral:
-    warm_white_blends: 80
-    twinklefox_whites: 80
+  angel_still_neutral:
+    angel_pastels_1: 50
+    angel_pastels_2: 50
+    angel_warm_white: 80
+    angel_pure_white: 80
+    angel_match_skirt: 40
+    angel_match_wings: 40
+
+  angel_moving_neutral:
+    warm_white_blends: 90
+    twinklefox_whites: 70
+
+  angel_still_rgw:
+    angel_rgw_1: 90
+    angel_rgw_2: 90
+
+  angel_still_rgb:
+    angel_rgb_1: 80
+    angel_rgb_2: 80
 
   hue_cane:
     hue_cane_chase: 20
@@ -84,9 +100,9 @@ presets:
 
 
 hosts:
-  strips:       [ porch, garage, puck ]
-  strings:      [ deck, tree-in, tree-out, trees-small ]
-  eves:         [ porch, garage, deck ]
+  strips:       [ puck ]
+  strings:      [ tree-in, tree-out, trees-small, garage, porch ]
+  eves:         [ porch, garage ]
   trees:        [ tree-in, tree-out, trees-small ]
-  all_no_angel: [ tree-in, tree-out, porch, garage, deck, puck, trees-small ]
-  all:          [ tree-in, tree-out, porch, garage, deck, puck, trees-small, angel ]
+  all_no_angel: [ tree-in, tree-out, porch, garage, puck, trees-small ]
+  all:          [ tree-in, tree-out, porch, garage, puck, trees-small, angel ]

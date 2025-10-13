@@ -26,7 +26,7 @@ class WLDLogger:
         logger.addFilter( fmt_filter )
         
         STDOUT_HANDLER = logging.StreamHandler(sys.stdout)
-        SYSLOG_HANDLER = logging.handlers.SysLogHandler(address = ('graylog.knet',1550))
+        SYSLOG_HANDLER = logging.handlers.SysLogHandler(address = ('graylog-6.knet',1516))
         
         STREAM_FORMATTER = logging.Formatter( f'{logColorCodes.blue}[%(asctime)s] {logColorCodes.light_blue}%(levelname)-8s {logColorCodes.purple}%(filename)s{logColorCodes.reset} {logColorCodes.green}%(name)s{logColorCodes.reset}.{logColorCodes.yellow}%(funcName)s{logColorCodes.reset} %(message)s' ) #, "%Y-%m-%d %H:%M:%S" )
         FILE_FORMATTER = logging.Formatter( f'[%(asctime)s] %(levelname)-8s %(filename)s %(name)s.%(funcName)s %(message)s' ) #, "%Y-%m-%d %H:%M:%S" )

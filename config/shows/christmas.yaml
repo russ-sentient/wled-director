@@ -31,6 +31,24 @@ ripple_hue_w:
         seg:
           - col: [ $rand_hue, white_dim ]
 
+ripple_all_hue_w:
+  weight: 25
+  animate: $rand_int(10,60)
+
+  groups:
+    all:
+      preset: hue_ripple
+      data:
+        seg:
+          - col: [ $rand_hue, white_dim ]
+
+ripple_all_hue_rand_cycle:
+  weight: 25
+
+  groups:
+    all:
+      preset: ripple_rnd_white
+
 ripple_rgb_w:
   weight: 25
   animate: 60
@@ -324,6 +342,8 @@ rgw_single:
       animate:
         seg:
           - col: [ $rand_list<c1>(xmas_rgw), ^black]
+    angel:
+      preset: $list(angel_still_neutral)(angel_still_rgw)
 
 rgb:
   weight: 40
@@ -337,6 +357,8 @@ rgb:
         seg:
           - col: [ $rand_list<c1>(!rgb), $rand_list<c2>(!rgb), $rand_list<c3>(!rgb) ]
             pal: "* Colors Only"
+    angel:
+      preset: $list(angel_still_neutral)(angel_still_rgb)
 
 
 rand_xmas:
@@ -369,6 +391,21 @@ red_green_white:
       data:
         seg:
           - col: [ red, white, green ]
+    angel:
+      preset: $list(angel_still_neutral)(angel_still_rgw)
+
+red_green_yellow:
+  weight: 60
+  duration: 90
+
+  groups:
+    all:
+      hosts: $list(all_no_angel)
+      preset: $list(multi_color_hue)
+      data:
+        seg:
+          - col: [ red, yellow, green ]
+
         
 all_crazy:
   weight: 30 
@@ -424,6 +461,8 @@ solid_xmas:
           - pal: "* Colors Only"
             fx: Colorful
             col: [ red, warm_white, green ]
+    angel:
+      preset: $list(angel_still_neutral)(angel_still_rgw)
 
 solid_rgb:
   weight: 50
@@ -440,6 +479,8 @@ solid_rgb:
           - pal: "* Colors Only"
             fx: Colorful
             col: [ red, green, blue ]
+    angel:
+      preset: $list(angel_still_neutral)(angel_still_rgb)
 
 tf_glitter:
   weight: 50

@@ -9,6 +9,13 @@ rolling_balls:
       sx: $rand_int<sx>(5,65)
       ix: $rand_int<ix>(125,255)
 
+hw_phase:
+  seg:
+    - fx: Plasma
+      pal: "* Colors Only"
+      sx: 45
+      ix: 55
+
 hue_ripple:
   seg:
     - fx: Ripple
@@ -242,3 +249,90 @@ rainbow_runner:
       ix: $rand_int<ix>(60,220)
       sx: $rand_int<sx>(25,180)
 
+ripple_rnd_white:
+  strip:
+    seg:
+      - mi: True
+  seg:
+    - pal: "* Random Cycle"
+      fx: Ripple
+      col: [ black, ^dim_white, black ]
+      sx: $rand_int<sx>(15,70)
+      ix: $rand_int<ix>(70,250)
+
+# angel: 0-8,15 = skirt, 9 = head, 10 = hands, 11-14 = wings
+angel_pastels_1:
+  seg:
+    i: [ 0,9,D0D0FF,10,13,FFD0D0,14,FFF0D0,15,FFF0D0 ]
+
+angel_pastels_2:
+  seg:
+    i: [ 0,9,FFD0D0,10,13,D0D0FF,14,FFF0D0,15,FFF0D0 ]
+
+angel_warm_white:
+  seg:
+    i: [0,13,FFF0E0,14,FFF0D0,15,FFF0D0 ]
+
+angel_pure_white:
+  seg:
+    i: [0,13,FFFFFF,14,FFF0E0,15,FFF0E0 ]
+
+angel_rgb_1:
+  seg:
+    i: [ 0,9,00FF00,10,13,0000FF,14,FF0000,15,FF0000 ]
+
+angel_rgb_2:
+  seg:
+    i: [ 0,9,FF0000,10,13,0000FF,14,00FF00,15,00FF00 ]
+
+angel_rgw_1:
+  seg:
+    i: [ 0,9,FF0000,10,13,00FF00,14,FFF0F0,15,FFF0F0 ]
+    
+angel_rgw_2:
+  seg:
+    i: [ 0,9,00FF00,10,13,FF0000,14,FFF0F0,15,FFF0F0 ]
+
+angel_match_skirt:
+  tt: 20
+  seg:
+    - n: Skirt
+      start: 0
+      stop: 10
+      copy: tree-in
+      frz: False
+      on: True
+    - n: Top
+      start: 10
+      stop: 16
+      fx: Solid
+      pal: 0
+      col: [ warm_white, black, black ]
+      frz: False
+      on: True
+
+angel_match_wings:
+  tt: 20
+  seg:
+    - n: Skirt
+      start: 0
+      stop: 10
+      fx: Solid
+      pal: 0
+      col: [ warm_white, black, black ]
+      frz: False
+      on: True
+    - n: Wings
+      start: 10
+      stop: 14
+      copy: tree-in
+      frz: False
+      on: True
+    - n: Top
+      start: 14
+      stop: 16
+      fx: Solid
+      pal: 0
+      col: [ warm_white, black, black ]
+      frz: False
+      on: True

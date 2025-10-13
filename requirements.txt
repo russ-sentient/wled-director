@@ -1,4 +1,5 @@
 pyyaml
 pyyaml-include
 httpx
+paho-mqtt
 

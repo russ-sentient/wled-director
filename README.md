@@ -4,13 +4,13 @@ Simple light show coordinator written in python using yaml config files.  WLED i
 This is a personal project for me to learn and have fun - the code is a beautiful mess, there are most likely 100 better ways to do this, and there are better solutions out there.  I have exploited yaml tags to add some procedural configuration options, which was fun to figure out and parse.
 
 
-TODO:
 
-Priority - Task
+TODO (Priority - Task):
 --------------------------
-10 - clean up code.
-10 - finish creating modules to handle common tasks.
+10 - clean up code.<br>
+10 - finish creating modules to handle common tasks.<br>
 8 - figure out if we want to use a modified version of python-wled or continue pushing to JSON api directly.
+
     Pros to python-wled:
         - async.
         - handles everything.

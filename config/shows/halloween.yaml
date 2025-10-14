@@ -4,14 +4,53 @@ phased_hw_purple_red:
 
   groups:
     eves:
-      hosts: $list(eves)
       preset: hw_phase
       data:
         transition: 75
         seg:
           - col: [ hw_purple, black, black ]
     trees:
-      hosts: $list(trees)
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ red, black, black ]
+            sx: 166
+            ix: 153
+
+
+phased_hw_green_red:
+  weight: 50
+  duration: 300
+
+  groups:
+    eves:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ hw_green, black, black ]
+    trees:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ red, black, black ]
+            sx: 166
+            ix: 153
+
+phased_hw_orange_red:
+  weight: 50
+  duration: 300
+
+  groups:
+    eves:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ orange, black, black ]
+    trees:
       preset: hw_phase
       data:
         transition: 75

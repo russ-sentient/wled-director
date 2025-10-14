@@ -9,6 +9,12 @@ rolling_balls:
       sx: $rand_int<sx>(5,65)
       ix: $rand_int<ix>(125,255)
 
+solid:
+  seg:
+    - fx: Solid
+      pal: "* Colors Only"
+      col: [ warm_white, black, black ]
+
 hw_phase:
   seg:
     - fx: Plasma
@@ -78,6 +84,7 @@ colorful:
     - fx: "Colorful"
       pal: "* Colors Only"
       col: [ white, warm_white, black ]
+      sx: 0
   strip:
     seg:
       - spc: 1

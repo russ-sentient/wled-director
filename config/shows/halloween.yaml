@@ -1,4 +1,4 @@
-phased_hw_purple_red:
+phased_hw_trio_red:
   weight: 50
   duration: 300
 
@@ -8,7 +8,7 @@ phased_hw_purple_red:
       data:
         transition: 75
         seg:
-          - col: [ hw_purple, black, black ]
+          - col: [ $rand_list(hw_trio), black, black ]
     trees:
       preset: hw_phase
       data:
@@ -18,43 +18,42 @@ phased_hw_purple_red:
             sx: 166
             ix: 153
 
-
-phased_hw_green_red:
+colorful_hw_dual:
   weight: 50
   duration: 300
 
   groups:
-    eves:
-      preset: hw_phase
+    all:
+      preset: colorful
       data:
         transition: 75
         seg:
-          - col: [ hw_green, black, black ]
-    trees:
-      preset: hw_phase
-      data:
-        transition: 75
-        seg:
-          - col: [ red, black, black ]
-            sx: 166
-            ix: 153
+          - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), black ]
 
-phased_hw_orange_red:
-  weight: 50
+solid_hw_all:
+  weight: 30
+  duration: 300
+
+  groups:
+    all:
+      preset: solid
+      data:
+        seg:
+          - col: [ $rand_list(hw_trio), black, black ]
+
+solid_hw_dual:
+  weight: 30
   duration: 300
 
   groups:
     eves:
-      preset: hw_phase
+      preset: solid
       data:
-        transition: 75
         seg:
-          - col: [ orange, black, black ]
+          - col: [ $rand_list<eves>(!hw_trio), black, black ]
+
     trees:
-      preset: hw_phase
+      preset: solid
       data:
-        transition: 75
         seg:
-          - col: [ red, black, black ]
-            sx: 166
-            ix: 153
+          - col: [ $rand_list<trees>(!hw_trio), black, black ]

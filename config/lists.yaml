@@ -11,6 +11,7 @@ colors:
   white_sats:   [ white, white_med, white_dim ]
   white_all:    [ white, warm_white, cool_white, white_med, white_dim ]
   blue:         [ blue, white ]
+  hw_trio:      [ hw_purple, hw_green, orange ]
 
 palettes:
   fireworks_1d:

@@ -1,7 +1,8 @@
+## define halloween shows here.
+
 phased_hw_trio_red:
   weight: 50
   duration: 300
-
   groups:
     eves:
       preset: hw_phase
@@ -18,10 +19,9 @@ phased_hw_trio_red:
             sx: 166
             ix: 153
 
-colorful_hw_dual:
+colorful_hw_dual_all:
   weight: 50
   duration: 300
-
   groups:
     all:
       preset: colorful
@@ -30,10 +30,37 @@ colorful_hw_dual:
         seg:
           - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), black ]
 
+colorful_hw_dual_split:
+  weight: 50
+  duration: 300
+  groups:
+    eves:
+      preset: colorful
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), black ]
+    trees:
+      preset: colorful
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list<c1>(hw_trio), $rand_list<c3>(!hw_trio), black ]
+
+colorful_hw_trio_all:
+  weight: 50
+  duration: 300
+  groups:
+    all:
+      preset: colorful
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), $rand_list<c3>(!hw_trio) ]
+
 solid_hw_all:
   weight: 30
   duration: 300
-
   groups:
     all:
       preset: solid
@@ -41,17 +68,15 @@ solid_hw_all:
         seg:
           - col: [ $rand_list(hw_trio), black, black ]
 
-solid_hw_dual:
-  weight: 30
+solid_hw_split:
+  weight: 50
   duration: 300
-
   groups:
     eves:
       preset: solid
       data:
         seg:
           - col: [ $rand_list<eves>(!hw_trio), black, black ]
-
     trees:
       preset: solid
       data:

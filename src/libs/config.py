@@ -3,7 +3,7 @@
 from typing import Any
 
 import yaml
-from yamlinclude import YamlIncludeConstructor
+import yaml_include
 
 from .logger import WLDLogger
 
@@ -18,6 +18,7 @@ CONFIG_DIR = f"{os.getcwd()}/config"
 ## config handler class.  cache data at init, only pull from os if modified date is newer than stored
 class WLDConfig():
     def __init__(self, config_name:str, load:bool=True ) -> None:
+        self._config_name   = config_name
         self._config_file   = f"{CONFIG_DIR}/{config_name}.yaml"
         self._log           = WLDLogger.get( f"WLDConfig({config_name})" )
         self._data          = None
@@ -32,14 +33,14 @@ class WLDConfig():
         if modified > self._cfg_modified:
             try:
                 with open( self._config_file ) as cfg_file:
-                    self._log.debug( "Caching .yaml" )
+                    self._log.debug( f"({self._config_name}.yaml) - Caching." )
                     self._data = yaml.load( cfg_file, Loader=WLDYaml.WLDYamlLoader )
                     self._cfg_modified = modified
             except Exception as e:
                 self._log.error( e )
                 
         ## we do not want to return a mutable reference to our private data, send a copy
-        self._log.debug( "Loading from cache" )
+        self._log.debug( f"({self._config_name}.yaml) - Loading from cache." )
         return ( self._data.copy() if isinstance(self._data, (dict|list)) else self._data )
     
     
@@ -54,18 +55,25 @@ class WLDConfig():
             
         return False
     
-## TODO: we should write a base WLDModel class so we can call get generically from parse function.
+class WLDBaseTag():
+    # overridden by child classes.  call from program to get the value.
+    def get(self,call_hint:str = "" ) -> Any:
+        pass
+
+    # overridden by child classes.  flushes stored memory between shows.
+    def flush_memory( self ) -> None:
+        pass
         
 ## dataclass for YAML !rand_int functionality
 ## define !rand_int in config, then when it is encountered in parsing pass we call get() method to get the value.
 ## handle all keyed random info internally.
-class WLDRandInt():
+class WLDRandInt(WLDBaseTag):
     def __init__(self, key:str|None = None, min:int = 0, max:int = 1 ) -> None:
         self._key = f"INT:{key}" if isinstance(key, str ) else None
         self._min = min
         self._max = max
 
-    def get(self) -> int:
+    def get(self, call_hint:str = '' ) -> int:
         if self._key and self._key in WLDRandomDaemon.keyed_randoms:
             return WLDRandomDaemon.keyed_randoms[self._key]
         else:
@@ -84,15 +92,15 @@ class WLDRandInt():
 ## FIXME: we should pass all info on initialization and check validity.  take optional param index for static list addressing.  Add a parser to pull a range. 
 ## TODO: consider using regexp to parse complicated scalars instead of writing messy mapppings.  ie: !list 
         
-class WLDRandList():
+class WLDRandList(WLDBaseTag):
     _lists = WLDConfig( "lists", load=False )
-    _log = WLDLogger.get( "WLDCList()" )  
+    _log = WLDLogger.get( "WLDRandList()" )
     
     def __init__(self, name:str ) -> None:
         self._name = name
         
     ## get one item from list ( if index is not defined should we pick at random here? )
-    def get( self, list_type:str, index:int|None|WLDRandInt = None ) -> Any:
+    def get( self, list_type:str = '' ) -> Any:
         try:
             m_list = WLDRandList._lists.load()[list_type][self._name]
         except KeyError as e:
@@ -102,30 +110,16 @@ class WLDRandList():
                 self.log( f"list type {e} not found in lists" )
             return None
         
-        if index == None:
-            ## TODO: put weighted pick function here...
+        ## TODO: put weighted pick function here...
             
-            if isinstance( m_list, list ):
-                return random.choice( m_list )
-            elif isinstance( m_list, dict ):
-                return random.choice( tuple(m_list.keys()) )
-            else:
-                self.log( "can't pick from non-iterable list, returning None" )
-                return None
+        if isinstance( m_list, list ):
+            return random.choice( m_list )
+        elif isinstance( m_list, dict ):
+            return random.choice( tuple(m_list.keys()) )
         else:
-            if isinstance( index, WLDRandInt ):
-                idx = index.get()
-            else:
-                idx = index
-
-            if isinstance( m_list, list ):
-                return m_list[idx%len(m_list)]
-            elif isinstance( m_list, dict ):
-                return tuple(m_list.keys())[idx%len(m_list)]
-            else:
-                self.log( "index supplied for non-iterable list, returning None" )
-                return None
-            
+            self.log( "can't pick from non-iterable list, returning None" )
+            return None
+       
             
     def log( self, msg:Any, level:str = "error" ) -> None:
         msg = f"[{self._name}] - {msg}"
@@ -140,23 +134,23 @@ class WLDRandList():
             WLDRandList._log.info( msg ) 
 
 ## replace weighted pick with this?  same as list but we define the weighted choices after the !pick tag
-class WLDPick():
+class WLDPick(WLDBaseTag):
     def __init__(self) -> None:
         pass
 
 ## random hue ( with offset? )
-class WLDRandHue():
+class WLDRandHue(WLDBaseTag):
     def __init__(self) -> None:
         pass
 
 ## manual hue
-class WLDHue():
+class WLDHue(WLDBaseTag):
     def __init__(self) -> None:
         pass
 
 ## tag to copy another host/groups data
 ## TODO: pass list of keys from parse function to pull same data from GET()
-class WLDCopy():
+class WLDCopy(WLDBaseTag):
     ## pass this in when we init director:
     _hosts = None
     ## pass this in as we parse a preset:
@@ -174,12 +168,18 @@ class WLDYaml():
             ## add constructors
             self.add_constructor( "!rand_list", WLDYaml._rand_list_constructor )
             self.add_constructor( "!rand_int", WLDYaml._rand_int_constructor )
-            
-            YamlIncludeConstructor.add_to_loader_class( WLDYaml.WLDYamlLoader, base_dir=CONFIG_DIR )
+            self.add_constructor("!include", yaml_include.Constructor(base_dir='./config'))
         
     ## define constructors:    
     @staticmethod
-    def _rand_list_constructor( loader: WLDYamlLoader, node: yaml.nodes.ScalarNode ) -> WLDRandList:
+    def _rand_list_constructor( loader: WLDYamlLoader, node: yaml.nodes.Node ) -> WLDRandList:
+        if isinstance( node, yaml.nodes.MappingNode ):
+            return WLDRandList( **loader.construct_mapping(node) ) #type: ignore
+        elif isinstance( node, yaml.nodes.ScalarNode ):
+            if isinstance( node.value, str ):
+                return WLDRandList( node.value )
+        elif isinstance( node, yaml.nodes.SequenceNode ):
+            return WLDRandList( node.value[0] )
         return WLDRandList( name=node.value )
     
     @staticmethod

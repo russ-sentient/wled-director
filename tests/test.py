@@ -10,9 +10,7 @@ def trace_object( obj, indent = 0 ) -> None:
     elif isinstance( obj, list ):
         for value in obj:
             trace_object( value, indent+2 )
-    elif isinstance( obj, WLDRandInt ):
-        print( " "*indent, obj.get() )
-    elif isinstance( obj, WLDRandList ):
+    elif isinstance( obj, WLDBaseTag ):
         print( " "*indent, obj.get( 'colors' ) )
     else:
         print( " "*indent, obj )
@@ -27,7 +25,6 @@ if __name__ == "__main__":
         data = config.load()
         print( "=========================================")
         trace_object( data )
-        sleep( 5.0 )
-
+        sleep( 10.0 )
 
     

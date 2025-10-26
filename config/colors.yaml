@@ -19,6 +19,6 @@ blue_dim:     [0,0,135]
 white_dim:    [120,120,120]
 white_med:    [190,190,190]
 
-hw_orange:    [255, 170, 0]
+hw_orange:    [240, 150, 0]
 hw_purple:    [170,0,255]
 hw_green:     [0, 255, 150]

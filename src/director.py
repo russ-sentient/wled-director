@@ -161,7 +161,10 @@ class WDirector( ):
 
     ## send data to all of the wled instances
     # @pyscript_compile
-    def update_lights( self, wled_data, simple:bool = False ):
+    def updateWLED( self, wled_data=None, simple:bool = False ):
+        if wled_data == None:
+            wled_data = self.wled_data
+
         req_hosts = []
         req_data = []
 
@@ -503,7 +506,7 @@ class WDirector( ):
         for host in self.wled_data:
             self.wled_data[host] = data_blank
 
-        self.update_lights( self.wled_data )
+        self.updateWLED()
         self.initWLEDData()
         self.wled_data.clear()
 
@@ -558,9 +561,12 @@ class WDirector( ):
                     self.mqtt.sendTimes( times={ "pick_show": show_duration.total_seconds(), 'animate':0.0 } )
 
                 self.time_retry = timedelta( seconds=self.config['settings']['wled_retry']['seconds'] ) + now
+                self.updateWLED()
 
-                self.update_lights( self.wled_data )
                 self.updateFloods()
+                self.flood_rep_time = timedelta( seconds=self.config['settings']['flood_retry']['seconds'] ) + now
+                self.flood_rep_cnt = self.config['settings']['flood_retry']['count']
+
                 ##
             else:
                 self.log.warning( "pickShow() or pullConfig() failed, retry in 10s" )
@@ -569,7 +575,7 @@ class WDirector( ):
 
         elif self.time_animate and self.time_animate <= now:
             self.Animate()
-            self.update_lights( self.wled_data )
+            self.updateWLED()
 
             if self.animate_duration < self.show_duration:
                 animate_duration = self.animate_duration * self.mqtt.wd_show_duration
@@ -596,6 +602,15 @@ class WDirector( ):
             else:
                 self.wled_retry_count = 0
                 self.time_retry = None
+
+
+        if self.flood_rep_time and self.flood_rep_time <= now:
+            if self.flood_rep_cnt:
+                self.updateFloods()
+                self.flood_rep_time = timedelta( seconds=self.config['settings']['flood_retry']['seconds'] ) + now
+                self.flood_rep_cnt -= 1
+            else:
+                self.flood_rep_time = None
 
 
     ## search data for weights, either as value or as weight key of sub data use them to randomly pick a result from the available ones
@@ -1048,6 +1063,9 @@ class WDirector( ):
     
     # push default flood data to flood data dict
     def initFloods( self ):
+        self.flood_rep_time = None
+        self.flood_rep_cnt = 0
+
         for f_name in self.config['floods']:
             self.flood_data[f_name] = { 'brightness': 0 }
 
@@ -1172,7 +1190,7 @@ class WDirector( ):
             else:
                 self.log.error( f"host '{k}' - does not contain default parameter!" )
 
-        self.update_lights( my_wledData, simple=True )
+        self.updateWLED( my_wledData, simple=True )
 
     def initWLEDData( self ):
         ## default segment data:
@@ -1241,6 +1259,9 @@ class WDirector( ):
         self.time_pick_show     = datetime.now()
         self.time_retry         = None
         self.time_animate       = None
+
+        self.flood_rep_time     = None
+        self.flood_rep_cnt      = 0
 
         self.show_duration      = timedelta( seconds= 5 )
         self.animate_duration   = timedelta( days= 14 )

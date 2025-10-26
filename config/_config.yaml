@@ -1,5 +1,9 @@
 ## Define all participating wled instances here:
 settings:
+  flood_retry:
+    count: 2
+    seconds: 1
+
   wled_retry:
     count: 5
     seconds: 10

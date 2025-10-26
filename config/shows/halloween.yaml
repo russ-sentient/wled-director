@@ -230,11 +230,12 @@ solid_hw_all:
           - col: [ $rand_list(!hw_trio), black, black ]
   floods:
     all:
+      chance: 90
       data:
         col: $rand_list(!hw_trio)
-        bri: 80
+        bri: 40
 
-solid_hw_split:
+solid_hw_split_trio:
   weight: 50
   duration: 300
   groups:
@@ -242,15 +243,36 @@ solid_hw_split:
       preset: solid
       data:
         seg:
-          - col: [ $rand_list(!hw_trio), black, black ]
+          - col: [ $rand_list(!hw_trio)<c1>, black, black ]
     trees:
       preset: solid
       data:
         seg:
-          - col: [ $rand_list(!hw_trio), black, black ]
+          - col: [ $rand_list(!hw_trio)<c2>, black, black ]
   floods:
     all:
-      chance: 50
+      chance: 90
       data:
-        col: $rand_list(!hw_trio)
-        bri: 80
+        col: $rand_list(!hw_trio)<c3>
+        bri: 33
+
+solid_hw_split_dual:
+  weight: 50
+  duration: 300
+  groups:
+    eves:
+      preset: solid
+      data:
+        seg:
+          - col: [ $rand_list(!hw_trio)<c1>, black, black ]
+    trees:
+      preset: solid
+      data:
+        seg:
+          - col: [ $rand_list(!hw_trio)<c2>, black, black ]
+  floods:
+    all:
+      chance: 90
+      data:
+        col: $rand_list(!hw_trio)<c2>
+        bri: 33

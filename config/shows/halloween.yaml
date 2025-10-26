@@ -1,4 +1,11 @@
 ## define halloween shows here.
+defaults:
+  floods:
+    rgb-3:
+      chance: 50
+      data:
+        col: red
+        bri: 120
 
 phased_hw_trio_sngl_red:
   weight: 50
@@ -19,10 +26,10 @@ phased_hw_trio_sngl_red:
             sx: 166
             ix: 153
   floods:
-    all:
+    porch:
       chance: 25
       data:
-        bri: 10
+        bri: 128
         col: red
 
 phased_hw_trio_sngl_tri:
@@ -44,10 +51,10 @@ phased_hw_trio_sngl_tri:
             sx: 166
             ix: 153
   floods:
-    all:
+    porch:
       chance: 25
       data:
-        bri: 10
+        bri: 128
         col: $rand_list(!hw_trio)<c3>
 
 phased_hw_trio_sngl_tri_match:
@@ -69,10 +76,10 @@ phased_hw_trio_sngl_tri_match:
             sx: 166
             ix: 153
   floods:
-    all:
+    porch:
       chance: 25
       data:
-        bri: 10
+        bri: 128
         col: $rand_list(!hw_trio)<c2>
 
 phased_hw_trio_dual_red:
@@ -96,10 +103,10 @@ phased_hw_trio_dual_red:
             sx: 150
             ix: 150
   floods:
-    all:
+    porch:
       chance: 33
       data:
-        bri: 10
+        bri: 128
         col: $rand_list(!hw_trio)<c3>
 
 phased_hw_trio_dual_match_comp:
@@ -123,10 +130,10 @@ phased_hw_trio_dual_match_comp:
             sx: 150
             ix: 25
   floods:
-    all:
+    porch:
       chance: 40
       data:
-        bri: 10
+        bri: 128
         col: $rand_list(!hw_trio)<c3>
 
 phased_hw_trio_dual_comp:
@@ -150,10 +157,10 @@ phased_hw_trio_dual_comp:
             sx: 150
             ix: 25
   floods:
-    all:
+    porch:
       chance: 33
       data:
-        bri: 10
+        bri: 128
         col: $rand_list(hw_trio)<c3>
 
 colorful_hw_dual_all:
@@ -168,10 +175,10 @@ colorful_hw_dual_all:
           - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), black ]
             grp: 5
   floods:
-    all:
+    porch:
       chance: 10
       data:
-        bri: 30
+        bri: 180
         col: $rand_list(!hw_trio)
 
 colorful_hw_dual_split:
@@ -193,10 +200,10 @@ colorful_hw_dual_split:
           - col: [ $rand_list<c1>(hw_trio), $rand_list<c3>(!hw_trio), black ]
             grp: 2
   floods:
-    all:
+    porch:
       chance: 10
       data:
-        bri: 30
+        bri: 200
         col: $rand_list<c3>(hw_trio)
 
 
@@ -213,10 +220,10 @@ colorful_hw_trio_all:
           - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), $rand_list<c3>(!hw_trio) ]
             grp: 5
   floods:
-    all:
+    porch:
       chance: 10
       data:
-        bri: 30
+        bri: 200
         col: red
 
 solid_hw_all:
@@ -229,11 +236,11 @@ solid_hw_all:
         seg:
           - col: [ $rand_list(!hw_trio), black, black ]
   floods:
-    all:
+    porch:
       chance: 90
       data:
         col: $rand_list(!hw_trio)
-        bri: 40
+        bri: 255
 
 solid_hw_split_trio:
   weight: 50
@@ -250,11 +257,11 @@ solid_hw_split_trio:
         seg:
           - col: [ $rand_list(!hw_trio)<c2>, black, black ]
   floods:
-    all:
+    porch:
       chance: 90
       data:
         col: $rand_list(!hw_trio)<c3>
-        bri: 33
+        bri: 225
 
 solid_hw_split_dual:
   weight: 50
@@ -271,8 +278,8 @@ solid_hw_split_dual:
         seg:
           - col: [ $rand_list(!hw_trio)<c2>, black, black ]
   floods:
-    all:
+    porch:
       chance: 90
       data:
         col: $rand_list(!hw_trio)<c2>
-        bri: 33
+        bri: 225

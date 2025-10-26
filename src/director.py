@@ -624,6 +624,11 @@ class WDirector( ):
             accum = 0
 
             for k, v in data.items():
+
+                ## skip defaults special key
+                if k == "defaults":
+                    continue
+
                 if isinstance( v, str ) and v.startswith( "test" ):
                     self.log.warning( f"test enabled for: {k}")
                     return k
@@ -652,6 +657,9 @@ class WDirector( ):
             self.log.debug( f"{choice=}")
 
             for k, v in data.items():
+                if k == "defaults":
+                    continue
+
                 if isinstance( v, dict ):
                     accum += v['weight']
                 elif isinstance( v, int ):
@@ -831,6 +839,7 @@ class WDirector( ):
 
         if show_type in self.config['shows']:
             shows = self.config['shows'][show_type]
+            
 
             # weighted pick for preset
             self.show = self.weightedPick( shows )
@@ -1037,12 +1046,14 @@ class WDirector( ):
                         self.wled_data[host] = copy.deepcopy(my_data)
                 
                 self.last_data[g_name] = copy.deepcopy(my_data)
+
+            f_hosts_used = list()
             
             ## check for mqtt floods
             if 'floods' in show_data and 'floods' in self.config:
                 for f_name, f_data in show_data['floods'].items():
 
-                    if 'chance' in f_data and f_data['chance'] <= random.randint(0,99):
+                    if 'chance' in f_data and f_data['chance'] <= random.randrange(0,100):
                         self.log.info( f"Floods <{f_name}>: Chance of {f_data['chance']} did not pass, continuing..." )
                         continue
 
@@ -1050,10 +1061,34 @@ class WDirector( ):
                     parsed_fdata = self.parseFloodData( f_name, f_data )
 
                     if f_name in self.config['floods']:
+                        f_hosts_used.append(f_name)
                         self.flood_data[f_name] = copy.deepcopy(parsed_fdata)
                     elif 'floods' in self.config['lists'] and f_name in self.config['lists']['floods']:
                         for fl_name in self.config['lists']['floods'][f_name]:
+                            f_hosts_used.append(fl_name)
                             self.flood_data[fl_name] = copy.deepcopy(parsed_fdata)
+
+            ## show specific defaults, check against data, if data keys missing
+            if 'defaults' in self.config['shows'][show_type]:
+                show_defaults = self.config['shows'][show_type]['defaults']
+
+                if 'floods' in show_defaults and len(f_hosts_used) < len(self.config['floods']):
+                    for df_name, df_data in show_defaults['floods'].items():
+
+                        ## TODO: add ability to use lists here?
+                        if df_name not in f_hosts_used and (df_name in self.config['floods']):
+
+                            if 'chance' in df_data and df_data['chance'] <= random.randrange(0,100):
+                                self.log.info( f"Defaults -> Floods <{df_name}>: Chance of {df_data['chance']} did not pass, continuing..." )
+                                continue
+
+                            df_data = df_data['data']
+                            parsed_fdata = self.parseFloodData( df_name, df_data )
+
+                            if df_name in self.config['floods']:
+                                self.flood_data[df_name] = copy.deepcopy(parsed_fdata)
+
+
 
         else:
             self.log.error( f"{show_type} not in config.shows!" )

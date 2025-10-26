@@ -5,3 +5,11 @@ rgb-1:
 rgb-2: 
   disabled: False
   topic: 'floods/light/rgb-2/command'
+
+rgb-3: 
+  disabled: False
+  topic: 'floods/light/rgb-3/command'
+
+rgb-4: 
+  disabled: False
+  topic: 'floods/light/rgb-4/command'

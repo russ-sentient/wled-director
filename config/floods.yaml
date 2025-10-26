@@ -1,0 +1,7 @@
+rgb-1: 
+  disabled: False
+  topic: 'floods/light/rgb-1/command'
+  
+rgb-2: 
+  disabled: False
+  topic: 'floods/light/rgb-2/command'

@@ -85,6 +85,7 @@ colorful:
       pal: "* Colors Only"
       col: [ white, warm_white, black ]
       sx: 0
+      ix: 255
   strip:
     seg:
       - spc: 1

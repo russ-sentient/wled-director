@@ -56,13 +56,34 @@ class WLDConfig():
         return False
     
 class WLDBaseTag():
+    _memory = dict()
     # overridden by child classes.  call from program to get the value.
+
     def get(self,call_hint:str = "" ) -> Any:
         pass
 
-    # overridden by child classes.  flushes stored memory between shows.
-    def flush_memory( self ) -> None:
-        pass
+    @classmethod
+    def flush_memory( cls ) -> None:
+        cls._memory.clear()
+
+    @classmethod
+    def hasKey( cls, key ) -> bool:
+        return key in cls._memory
+
+    @classmethod
+    def getKey( cls, key ) -> Any:
+        if key in cls._memory:
+            return cls._memory[key]
+        else:
+            return None
+        
+    @classmethod
+    def setKey( cls, key, value ) -> None:
+        if key in cls._memory:
+            pass # need error handling here
+        else:
+            cls._memory[key] = value
+        
         
 ## dataclass for YAML !rand_int functionality
 ## define !rand_int in config, then when it is encountered in parsing pass we call get() method to get the value.
@@ -74,6 +95,9 @@ class WLDRandInt(WLDBaseTag):
         self._max = max
 
     def get(self, call_hint:str = '' ) -> int:
+        if self._key and self.hasKey( self._key ):
+            return self.getKey( self._key )
+        
         if self._key and self._key in WLDRandomDaemon.keyed_randoms:
             return WLDRandomDaemon.keyed_randoms[self._key]
         else:

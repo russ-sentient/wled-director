@@ -1,6 +1,6 @@
 ## define halloween shows here.
 
-phased_hw_trio_red:
+phased_hw_trio_sngl_red:
   weight: 50
   duration: 300
   groups:
@@ -18,6 +18,143 @@ phased_hw_trio_red:
           - col: [ red, black, black ]
             sx: 166
             ix: 153
+  floods:
+    all:
+      chance: 25
+      data:
+        bri: 10
+        col: red
+
+phased_hw_trio_sngl_tri:
+  weight: 30
+  duration: 300
+  groups:
+    eves:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(!hw_trio)<c1>, black, black ]
+    trees:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(!hw_trio)<c2>, black, black ]
+            sx: 166
+            ix: 153
+  floods:
+    all:
+      chance: 25
+      data:
+        bri: 10
+        col: $rand_list(!hw_trio)<c3>
+
+phased_hw_trio_sngl_tri_match:
+  weight: 30
+  duration: 300
+  groups:
+    eves:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(!hw_trio)<c1>, black, black ]
+    trees:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(!hw_trio)<c2>, black, black ]
+            sx: 166
+            ix: 153
+  floods:
+    all:
+      chance: 25
+      data:
+        bri: 10
+        col: $rand_list(!hw_trio)<c2>
+
+phased_hw_trio_dual_red:
+  weight: 30
+  duration: 300
+  groups:
+    eves:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(!hw_trio)<c1>, $rand_list(!hw_trio)<c2>, black ]
+            sx: 150
+            ix: 25
+    trees:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ red, black, black ]
+            sx: 150
+            ix: 150
+  floods:
+    all:
+      chance: 33
+      data:
+        bri: 10
+        col: $rand_list(!hw_trio)<c3>
+
+phased_hw_trio_dual_match_comp:
+  weight: 30
+  duration: 300
+  groups:
+    eves:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(!hw_trio)<c1>, $rand_list(!hw_trio)<c2>, black ]
+            sx: 150
+            ix: 25
+    trees:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(hw_trio)<c1>, $rand_list(hw_trio)<c2>, black ]
+            sx: 150
+            ix: 25
+  floods:
+    all:
+      chance: 40
+      data:
+        bri: 10
+        col: $rand_list(!hw_trio)<c3>
+
+phased_hw_trio_dual_comp:
+  weight: 30
+  duration: 300
+  groups:
+    eves:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(!hw_trio)<c1>, $rand_list(!hw_trio)<c2>, black ]
+            sx: 150
+            ix: 25
+    trees:
+      preset: hw_phase
+      data:
+        transition: 75
+        seg:
+          - col: [ $rand_list(hw_trio)<c1>, $rand_list(!hw_trio)<c3>, black ]
+            sx: 150
+            ix: 25
+  floods:
+    all:
+      chance: 33
+      data:
+        bri: 10
+        col: $rand_list(hw_trio)<c3>
 
 colorful_hw_dual_all:
   weight: 50
@@ -29,6 +166,13 @@ colorful_hw_dual_all:
         transition: 75
         seg:
           - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), black ]
+            grp: 5
+  floods:
+    all:
+      chance: 10
+      data:
+        bri: 30
+        col: $rand_list(!hw_trio)
 
 colorful_hw_dual_split:
   weight: 50
@@ -40,12 +184,21 @@ colorful_hw_dual_split:
         transition: 75
         seg:
           - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), black ]
+            grp: 5
     trees:
       preset: colorful
       data:
         transition: 75
         seg:
           - col: [ $rand_list<c1>(hw_trio), $rand_list<c3>(!hw_trio), black ]
+            grp: 2
+  floods:
+    all:
+      chance: 10
+      data:
+        bri: 30
+        col: $rand_list<c3>(hw_trio)
+
 
 colorful_hw_trio_all:
   weight: 50
@@ -55,8 +208,16 @@ colorful_hw_trio_all:
       preset: colorful
       data:
         transition: 75
+        bri: 200
         seg:
           - col: [ $rand_list<c1>(!hw_trio), $rand_list<c2>(!hw_trio), $rand_list<c3>(!hw_trio) ]
+            grp: 5
+  floods:
+    all:
+      chance: 10
+      data:
+        bri: 30
+        col: red
 
 solid_hw_all:
   weight: 30
@@ -66,7 +227,12 @@ solid_hw_all:
       preset: solid
       data:
         seg:
-          - col: [ $rand_list(hw_trio), black, black ]
+          - col: [ $rand_list(!hw_trio), black, black ]
+  floods:
+    all:
+      data:
+        col: $rand_list(!hw_trio)
+        bri: 80
 
 solid_hw_split:
   weight: 50
@@ -76,9 +242,15 @@ solid_hw_split:
       preset: solid
       data:
         seg:
-          - col: [ $rand_list<eves>(!hw_trio), black, black ]
+          - col: [ $rand_list(!hw_trio), black, black ]
     trees:
       preset: solid
       data:
         seg:
-          - col: [ $rand_list<trees>(!hw_trio), black, black ]
+          - col: [ $rand_list(!hw_trio), black, black ]
+  floods:
+    all:
+      chance: 50
+      data:
+        col: $rand_list(!hw_trio)
+        bri: 80

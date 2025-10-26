@@ -11,7 +11,7 @@ colors:
   white_sats:   [ white, white_med, white_dim ]
   white_all:    [ white, warm_white, cool_white, white_med, white_dim ]
   blue:         [ blue, white ]
-  hw_trio:      [ hw_purple, hw_green, orange ]
+  hw_trio:      [ hw_purple, hw_green, hw_orange ]
 
 palettes:
   fireworks_1d:
@@ -107,3 +107,6 @@ hosts:
   trees:        [ tree-in, tree-out, trees-small ]
   all_no_angel: [ tree-in, tree-out, porch, garage, puck, trees-small ]
   all:          [ tree-in, tree-out, porch, garage, puck, trees-small, angel ]
+
+floods:
+  all:          [ rgb-1, rgb-2 ]

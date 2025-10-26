@@ -38,6 +38,7 @@ defaults:
 
 
 hosts: !include hosts.yaml
+floods: !include floods.yaml
 
 ## Shortcut colors:
 colors: !include colors.yaml

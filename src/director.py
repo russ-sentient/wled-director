@@ -507,6 +507,9 @@ class WDirector( ):
         self.initWLEDData()
         self.wled_data.clear()
 
+        self.initFloods()
+        self.updateFloods()
+
 
     ## called every tick, handle any operation logic here ( handle timeout retries, pick new shows, handle animating shows )
     def Update( self ):
@@ -557,6 +560,7 @@ class WDirector( ):
                 self.time_retry = timedelta( seconds=self.config['settings']['wled_retry']['seconds'] ) + now
 
                 self.update_lights( self.wled_data )
+                self.updateFloods()
                 ##
             else:
                 self.log.warning( "pickShow() or pullConfig() failed, retry in 10s" )
@@ -1018,12 +1022,115 @@ class WDirector( ):
                         self.wled_data[host] = copy.deepcopy(my_data)
                 
                 self.last_data[g_name] = copy.deepcopy(my_data)
+            
+            ## check for mqtt floods
+            if 'floods' in show_data and 'floods' in self.config:
+                for f_name, f_data in show_data['floods'].items():
+
+                    if 'chance' in f_data and f_data['chance'] <= random.randint(0,99):
+                        self.log.info( f"Floods <{f_name}>: Chance of {f_data['chance']} did not pass, continuing..." )
+                        continue
+
+                    f_data = f_data['data']
+                    parsed_fdata = self.parseFloodData( f_name, f_data )
+
+                    if f_name in self.config['floods']:
+                        self.flood_data[f_name] = copy.deepcopy(parsed_fdata)
+                    elif 'floods' in self.config['lists'] and f_name in self.config['lists']['floods']:
+                        for fl_name in self.config['lists']['floods'][f_name]:
+                            self.flood_data[fl_name] = copy.deepcopy(parsed_fdata)
 
         else:
             self.log.error( f"{show_type} not in config.shows!" )
             return False
 
         return True
+    
+    # push default flood data to flood data dict
+    def initFloods( self ):
+        for f_name in self.config['floods']:
+            self.flood_data[f_name] = { 'brightness': 0 }
+
+    def updateFloods( self ):
+        for f_name, f_data in self.config['floods'].items():
+            if 'disabled' in f_data and not f_data['disabled']:
+                self.log.info( f"{f_name=} {self.flood_data[f_name]=}")
+                self.mqtt.Publish( f_data['topic'], self.flood_data[f_name] )
+
+    def parseFloodData( self, f_name, f_data ) -> dict:
+        col_titles = ['r','g','b']
+        pf_data = dict()
+
+        ## HACK: turn on floods
+        pf_data['state'] = 'ON'
+ 
+        if 'bri' in f_data:
+            pf_data['brightness'] = f_data['bri']
+
+        if 'col' in f_data:
+            pf_data['color'] = dict()
+
+            col = f_data['col']
+
+            if isinstance( col, str ):
+                ## handle $ tags first, then fall through to name indexing
+                if col[0] == '$':
+                    if col.startswith( "$rand_hue"):
+                        rb = re.findall( '[(](.*?)[)]', col )
+                        rx = re.findall( '<(.*?)>', col )
+
+                        if len(rx):
+                            key = rx[0]
+                        else:
+                            key = f_name
+
+                        if len(rb):
+                            val = int( rb[0] )
+                        else:
+                            val = 255
+
+                        color = self.random_hue( key, val )
+                        self.log.info( f"col: rand_hue<{key}> = {color}")
+                        col = color
+
+                    elif col.startswith( "$rand_list" ):
+                        rb = re.findall( '[(](.*?)[)]', col )
+                        rx = re.findall( '<(.*?)>', col )
+                        no_rep = ""
+
+                        if not len(rb):
+                            self.log.error( f"col: $rand_list must have '(list_name)', using black" )
+                            col = 'black'
+
+                        if rb[0][0] == '!':
+                            rb[0] = rb[0][1:]
+                            no_rep = rb[0]
+
+                        if rb[0] in self.config['lists']['colors']:
+                            n_col = self.random_list( rx[0] if len(rx) else f_name, self.config['lists']['colors'][rb[0]], no_rep )
+
+                            self.log.info( f"col: $rand_list({rb[0]}) = {n_col=}")
+
+                            col = n_col
+                        else:
+                            self.log.warning( f"$rand_list: {rb[0]} not in lists.colors!")
+
+                if isinstance( col, str ):
+                    if col in self.config['colors']:
+                        col = self.config['colors'][col]
+                    else:
+                        col = [0,0,0]
+                        self.log.error( f"col: {col} not in config.colors!" )
+
+            if isinstance( col, list ):
+                for i, val in enumerate(col):
+                    pf_data['color'][col_titles[i]] = val
+
+            if sum(col) == 0:
+                pf_data['brightness'] = 0
+
+        return pf_data
+
 
     # def ha_pull_config_now( self ):
     #     self.ha_pull_config = True
@@ -1081,6 +1188,7 @@ class WDirector( ):
         self.animate_duration = timedelta( days=14 )
 
         self.wled_data.clear()
+        self.flood_data.clear()
         self.last_data.clear()
 
         self.linked_copies.clear()
@@ -1094,6 +1202,8 @@ class WDirector( ):
 
                 for i in range( self.getDefaultSegmentCount(k) ):
                     self.wled_data[k]['seg'].append( { "pal": 0, "col": [[0,0,0],[0,0,0],[0,0,0]], "grp": 1, "spc": 0 } )
+
+        self.initFloods()
 
     def __del__( self ):
         self.log.info( "exiting..." )
@@ -1119,6 +1229,8 @@ class WDirector( ):
         random.seed( datetime.now().microsecond )
 
         ## setup the data registers
+        self.flood_data = dict()
+
         self.wled_data = dict()
         self.last_data = dict()
         self.wled_errors = dict()

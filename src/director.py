@@ -2,6 +2,8 @@ import yaml, httpx, random, copy, colorsys, re, json
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
+from libs.utils import scaleByte
+
 import yaml_include
 
 yaml.add_constructor("!include", yaml_include.Constructor(base_dir='./config'))
@@ -204,8 +206,17 @@ class WDirector( ):
         with ThreadPoolExecutor(max_workers=7) as pool:
             pool.map(self.wled_post, req_hosts, req_data)
 
+    def color_rgb_to_hsv( self, r:int, g:int, b:int ) -> list:
+        rf = r/255
+        gf = g/255
+        bf = b/255
 
-    def color_hsv_to_rgb( self, h:int, s:int, v:int ):
+        ( hf, sf, vf ) = colorsys.rgb_to_hsv( rf, gf, bf )
+
+        return [ int(hf*255), int(sf*255), int(vf*255) ]
+
+
+    def color_hsv_to_rgb( self, h:int, s:int, v:int ) -> list:
         hf = h/255
         sf = s/255
         vf = v/255
@@ -214,6 +225,17 @@ class WDirector( ):
 
         return [ int(rf*255), int(gf*255), int(bf*255) ]
 
+    def color_hue_shift( self, r:int, g:int, b:int, deg:int ) -> list:
+        rf = r/255
+        gf = g/255
+        bf = b/255
+        df = deg/360
+
+        ( hf, sf, vf ) = colorsys.rgb_to_hsv( rf, gf, bf )
+        hf = (hf + df) % 1.0
+        ( rf, gf, bf ) = colorsys.hsv_to_rgb( hf, sf, vf )
+
+        return [ int(rf*255), int(gf*255), int(bf*255) ]
 
     def random_hue( self, key:str, val:int = 255 ) -> list:
         return self.color_hsv_to_rgb( self.random_int( f"{key}%HUE", 256 ), 255, val )
@@ -1105,10 +1127,30 @@ class WDirector( ):
             self.flood_data[f_name] = { 'brightness': 0 }
 
     def updateFloods( self ):
-        for f_name, f_data in self.config['floods'].items():
-            if 'disabled' in f_data and not f_data['disabled']:
-                self.log.info( f"{f_name=} {self.flood_data[f_name]=}")
-                self.mqtt.Publish( f_data['topic'], self.flood_data[f_name] )
+        for fh_name, fh_data in self.config['floods'].items():
+            if 'disabled' in fh_data and not fh_data['disabled']:
+                f_data = self.flood_data[fh_name]
+
+                ## add ability to scale brightness and rgb per light.  crude attempt at gamma balancing lights to other lights.
+                if 'scalars' in fh_data:
+                    scalars = fh_data['scalars']
+                    if 'brightness' in scalars and 'brightness' in f_data:
+                        f_data['brightness'] = scaleByte( f_data['brightness'], scalars['brightness'] )
+
+                    if 'color' in f_data:
+                        if 'r' in scalars and 'r' in f_data['color']:
+                            f_data['color']['r'] = scaleByte( f_data['color']['r'], scalars['r'] )
+                        if 'g' in scalars and 'g' in f_data['color']:
+                            f_data['color']['g'] = scaleByte( f_data['color']['g'], scalars['g'] )
+                        if 'b' in scalars and 'b' in f_data['color']:
+                            f_data['color']['b'] = scaleByte( f_data['color']['b'], scalars['b'] )
+
+                    if 'hue' in scalars and  'color' in f_data and {'r', 'g', 'b'}.issubset(f_data['color'].keys()):
+                        ( f_data['color']['r'], f_data['color']['g'], f_data['color']['b'] ) = \
+                            self.color_hue_shift( f_data['color']['r'], f_data['color']['g'], f_data['color']['b'], scalars['hue'])
+
+                self.log.info( f"{fh_name=} {self.flood_data[fh_name]=}")
+                self.mqtt.Publish( fh_data['topic'], self.flood_data[fh_name] )
 
     def parseFloodData( self, f_name, f_data ) -> dict:
         col_titles = ['r','g','b']

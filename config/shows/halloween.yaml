@@ -264,7 +264,7 @@ solid_hw_split_trio:
         bri: 225
 
 solid_hw_split_dual:
-  weight: 50
+  weight: test 50
   duration: 300
   groups:
     eves:
@@ -279,7 +279,7 @@ solid_hw_split_dual:
           - col: [ $rand_list(!hw_trio)<c2>, black, black ]
   floods:
     porch:
-      chance: 90
+      chance: 100
       data:
         col: $rand_list(!hw_trio)<c2>
         bri: 225

@@ -3,6 +3,7 @@ rgb-1:
   disabled: False
   topic: 'floods/light/rgb-1/command'
   scalars:
+    brightness: 225
     hue: -7
     r: 245
   
@@ -11,6 +12,7 @@ rgb-2:
   disabled: False
   topic: 'floods/light/rgb-2/command'
   scalars:
+    brightness: 225
     hue: -7
     r: 245
 
@@ -18,11 +20,14 @@ rgb-2:
 rgb-3: 
   disabled: False
   topic: 'floods/light/rgb-3/command'
+  scalars:
+    brightness: 225
 
 # bay up-light
 rgb-4: 
   disabled: False
   topic: 'floods/light/rgb-4/command'
   scalars:
+    brightness: 225
     hue: -7
     r: 245

@@ -264,7 +264,7 @@ solid_hw_split_trio:
         bri: 225
 
 solid_hw_split_dual:
-  weight: test 50
+  weight: 50
   duration: 300
   groups:
     eves:

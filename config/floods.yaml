@@ -4,7 +4,7 @@ rgb-1:
   topic: 'floods/light/rgb-1/command'
   scalars:
     brightness: 225
-    hue: -7
+    hue: -8
     r: 245
   
 # porch 2
@@ -13,7 +13,7 @@ rgb-2:
   topic: 'floods/light/rgb-2/command'
   scalars:
     brightness: 225
-    hue: -7
+    hue: -8
     r: 245
 
 # skeleton
@@ -29,5 +29,12 @@ rgb-4:
   topic: 'floods/light/rgb-4/command'
   scalars:
     brightness: 225
-    hue: -7
+    hue: -8
     r: 245
+
+# studio hue rgb bulb
+hue-rgb1:
+  disabled: False
+  topic: 'lamps/hue-rgb1/command'
+  scalars:
+    brightness: 230

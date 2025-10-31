@@ -54,7 +54,7 @@ tree-out:
     seg:
       - n: 'Main'
         start: 0
-        stop: 100
+        stop: 125
 
 puck:
   hostname: http://wled-puck.knet
@@ -85,6 +85,27 @@ trees-small:
       - n: 'Tree2'
         start: 62
         stop: 124
+
+pumpkins:
+  hostname: http://wled-aux2-5v.knet
+  type: string
+  disabled: False
+
+  bri: 255
+  segments: 3
+
+  default:
+    bri: 255
+    seg:
+      - n: 'Pumpkin1'
+        start: 0
+        stop: 16
+      - n: 'Pumpkin2'
+        start: 17
+        end: 32
+      - n: 'Pumpkin3'
+        start: 33
+        end: 48
 
 angel:
   hostname: http://wled-tree-angel.knet

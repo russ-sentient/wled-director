@@ -109,6 +109,7 @@ hosts:
   all:          [ tree-in, tree-out, porch, garage, puck, trees-small, angel ]
 
 floods:
-  all:          [ rgb-1, rgb-2, rgb-3, rgb-4 ]
-  porch:        [ rgb-1, rgb-2, rgb-4 ]
+  all:          [ rgb-1, rgb-2, rgb-3, rgb-4, hue-rgb1 ]
+  porch:        [ rgb-1, rgb-2, rgb-4, hue-rgb1 ]
   skeleton:     [ rgb-3 ]
+  windows:      [ hue-rgb1 ]

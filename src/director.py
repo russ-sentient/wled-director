@@ -455,8 +455,8 @@ class WDirector( ):
                     if isinstance( col, str ) and col[0] == '^':
                         col = col[1:]
 
-                        if self.group_data and 'animate' in self.group_data:
-                            ani = self.group_data['animate']
+                        if self.curr_group_data and 'animate' in self.curr_group_data:
+                            ani = self.curr_group_data['animate']
 
                             try:
                                 ani['seg'][i_seg]['col'][i_col] = col
@@ -852,7 +852,7 @@ class WDirector( ):
         ## clear data out...
         self.initWLEDData()
 
-        show_type = self.show_type ## copy incase this changes
+        show_type = self.show_type ## copy incase this changes during cycle
 
         debug_me = self.config['debug']['show_data']
 
@@ -861,19 +861,20 @@ class WDirector( ):
 
         if show_type in self.config['shows']:
             shows = self.config['shows'][show_type]
-            
 
             # weighted pick for preset
             self.show = self.weightedPick( shows )
 
             self.log.info( f'SHOW: {self.show}')
-            self.mqtt.Publish( 'status/show_name', self.show )
 
             if not self.show:
                 self.log.error( f"weighed_pick({shows}) returned None" )
                 return False
+            
+            self.mqtt.Publish( 'status/show_name', self.show )
 
             show_data = shows[self.show]
+
             if debug_me:
                 self.log.debug( f'\t{show_data=}')
 
@@ -915,7 +916,8 @@ class WDirector( ):
             for g_name, g_data in show_data['groups'].items():
                 
                 self.log.info( f'GROUP: {g_name}')
-                self.group_data = g_data
+                self.curr_group_data = g_data
+                self.curr_group_name = g_name
 
                 if debug_me:
                     self.log.debug( f"\t{g_data=}")
@@ -1036,9 +1038,9 @@ class WDirector( ):
 
                 self.log.info( "PARSE:" )
                 self.parseData( my_data, g_name )
+
                 if debug_me:
                     self.log.debug( f'\tmy_data: {my_data}')
-
 
                 ## if we have a hosts 
                 if 'hosts' in g_data:
@@ -1069,7 +1071,7 @@ class WDirector( ):
                 
                 self.last_data[g_name] = copy.deepcopy(my_data)
 
-            f_hosts_used = list()
+            fl_hosts_used = list()
             
             ## check for mqtt floods
             if 'floods' in show_data and 'floods' in self.config:
@@ -1083,22 +1085,22 @@ class WDirector( ):
                     parsed_fdata = self.parseFloodData( f_name, f_data )
 
                     if f_name in self.config['floods']:
-                        f_hosts_used.append(f_name)
+                        fl_hosts_used.append(f_name)
                         self.flood_data[f_name] = copy.deepcopy(parsed_fdata)
                     elif 'floods' in self.config['lists'] and f_name in self.config['lists']['floods']:
                         for fl_name in self.config['lists']['floods'][f_name]:
-                            f_hosts_used.append(fl_name)
+                            fl_hosts_used.append(fl_name)
                             self.flood_data[fl_name] = copy.deepcopy(parsed_fdata)
 
             ## show specific defaults, check against data, if data keys missing
             if 'defaults' in self.config['shows'][show_type]:
                 show_defaults = self.config['shows'][show_type]['defaults']
 
-                if 'floods' in show_defaults and len(f_hosts_used) < len(self.config['floods']):
+                if 'floods' in show_defaults and len(fl_hosts_used) < len(self.config['floods']):
                     for df_name, df_data in show_defaults['floods'].items():
 
                         ## TODO: add ability to use lists here?
-                        if df_name not in f_hosts_used and (df_name in self.config['floods']):
+                        if df_name not in fl_hosts_used and (df_name in self.config['floods']):
 
                             if 'chance' in df_data and df_data['chance'] <= random.randrange(0,100):
                                 self.log.info( f"Defaults -> Floods <{df_name}>: Chance of {df_data['chance']} did not pass, continuing..." )
@@ -1110,7 +1112,12 @@ class WDirector( ):
                             if df_name in self.config['floods']:
                                 self.flood_data[df_name] = copy.deepcopy(parsed_fdata)
 
-
+                if 'wled' in show_defaults:
+                    for df_name, df_data in show_defaults['wled'].items():
+                        if 'data' in df_data and df_name in self.config['hosts']:
+                            d_my_data = df_data['data']
+                            self.parseData( d_my_data, f"DEFAULT%{df_name}" )
+                            self.wled_data[df_name] = copy.deepcopy( d_my_data )
 
         else:
             self.log.error( f"{show_type} not in config.shows!" )
@@ -1289,7 +1296,8 @@ class WDirector( ):
         self.linked_copies.clear()
 
         ## hack for over-riding forced animation colors
-        self.group_data = None
+        self.curr_group_data = None
+        self.curr_group_name = ''
 
         if self.config['settings']['blank_all_hosts'] or self.show_type == "disabled":
             for k in self.config['hosts']:
@@ -1330,8 +1338,10 @@ class WDirector( ):
         self.last_data = dict()
         self.wled_errors = dict()
         self.linked_copies = dict()
-
         self.keyed_randoms = dict()
+
+        self.curr_group_data = dict()
+        self.curr_group_name = ""
 
         self.time_pick_show     = datetime.now()
         self.time_retry         = None

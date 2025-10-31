@@ -6,6 +6,26 @@ defaults:
       data:
         col: red
         bri: 120
+  wled:
+    pumpkins:
+      data:
+        transition: 30
+        seg:
+          - col: [ orange, black, black ]
+            pal: "* Color Gradient"
+            fx: "Candle"
+            sx: $rand_int(150,255)
+            ix: 220
+          - col: [ orange, black, black ]
+            pal: "* Color Gradient"
+            fx: "Candle"
+            sx: $rand_int(150,255)
+            ix: 220
+          - col: [ orange, black, black ]
+            pal: "* Color Gradient"
+            fx: "Candle"
+            sx: $rand_int(150,255)
+            ix: 220
 
 phased_hw_trio_sngl_red:
   weight: 50
